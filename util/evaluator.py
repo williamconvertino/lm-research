@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 
 def generate_text_temperature(model, tokenizer, prompt, max_length=50, temperature=1.0, device="gpu"):
+    model.to(device)
     model.eval()
     input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
     generated = input_ids
@@ -27,6 +28,7 @@ def generate_text_temperature(model, tokenizer, prompt, max_length=50, temperatu
     return tokenizer.decode(generated[0].tolist()[input_size:])
 
 def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, device="gpu"):
+    model.to(device)
     model.eval()
     input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
     input_size = input_ids.size(1)
