@@ -38,7 +38,7 @@ class Trainer:
             free_memory, total_memory = torch.cuda.mem_get_info(gpu)
             total_memory = int(total_memory / 1024**3)
             free_memory = int(free_memory / 1024**3)  
-            if free_memory > 10e9:
+            if free_memory > 10:
                 print(f"Using GPU [{i}]: {props.name} with {free_memory:.2f}GB")
                 return torch.device(f'cuda:{i}')
             else:
