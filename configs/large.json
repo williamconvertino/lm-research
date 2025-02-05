@@ -1,6 +1,6 @@
 {
     "model": {
-        "name": "default",
+        "name": "large",
         "type": "gpt",
         "vocab_size": 50257,
         "max_seq_len": 256,

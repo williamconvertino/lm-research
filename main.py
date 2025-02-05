@@ -21,6 +21,7 @@ def dict_to_namespace(d):
     return SimpleNamespace(**d)
 
 def train(model, config):
+    print(f"Training model {config.model.name}")
     tokenizer = get_tokenizer()
     train_loader, val_loader, test_loader = get_dataloaders(
         tokenizer,
@@ -31,6 +32,7 @@ def train(model, config):
     trainer.train()
 
 def eval(model, config, eval_type=None):
+    print(f"Evaluating model {config.model.name}")
     checkpoint_path = f"checkpoints/{config.model.name}.pt"
     model = load_checkpoint(model, checkpoint_path)
     tokenizer = get_tokenizer()
