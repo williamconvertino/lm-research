@@ -3,15 +3,22 @@ from argparse import ArgumentParser
 from models.gpt import GPT
 from util.trainer import Trainer
 from dataset.dataset import get_dataloaders, get_tokenizer
+from types import SimpleNamespace
+
+def dict_to_namespace(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            d[k] = dict_to_namespace(v)
+    return SimpleNamespace(**d)
 
 def train(model, config):
     tokenizer = get_tokenizer()
     train_loader, val_loader, test_loader = get_dataloaders(
         tokenizer,
-        config["model"]["max_seq_len"],
-        config["training"]["batch_size"]
+        config.model.max_seq_len,
+        config.training.batch_size
     )
-    trainer = Trainer(model, config["training"], train_loader, val_loader)
+    trainer = Trainer(model, config.training, train_loader, val_loader)
     trainer.train()
 
 def eval(model):
@@ -23,12 +30,14 @@ def main():
     parser.add_argument("--eval", action="store_true", help="Run evaluation")
     parser.add_argument("--config", type=str, default="default.json")
     args = parser.parse_args()
-    config = json.load(open(f"configs/{args.config}"))
-    if config["model"]["type"] == "gpt":
-        model = GPT(config["model"])
+    
+    config_dict = json.load(open(f"configs/{args.config}"))
+    config = dict_to_namespace(config_dict)
+    
+    if config.model.type == "gpt":
+        model = GPT(config.model)
     else:
-
-        raise ValueError(f"Invalid model type: {config['model']['type']}")
+        raise ValueError(f"Invalid model type: {config.model.type}")
 
     assert args.train or args.eval, "Must specify either training or evaluation"
     assert not (args.train and args.eval), "Cannot specify both training and evaluation"
