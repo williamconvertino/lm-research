@@ -21,10 +21,10 @@ class Trainer:
         )
         
         # Early stopping parameters
-        self.patience = config.get('patience', 5)
+        self.patience = config.patience
         self.early_stopping_counter = 0
         
-        self.grad_clip = config.get('grad_clip', 1.0)
+        self.grad_clip = config.grad_clip
 
     def get_device(self):
         if not torch.cuda.is_available():
