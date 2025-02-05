@@ -95,7 +95,8 @@ class Trainer:
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                os.mkdirs("checkpoints", exist_ok=True)
+                if not os.path.exists("checkpoints"):
+                    os.mkdir("checkpoints")
                 torch.save({
                     'epoch': epoch,
                     'model_state_dict': self.model.state_dict(),
