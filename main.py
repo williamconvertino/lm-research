@@ -19,7 +19,8 @@ def eval(model):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--mode", type=str, default="train", choices=["train", "eval"])
+    parser.add_argument("--train", action="store_true", help="Run training")
+    parser.add_argument("--eval", action="store_true", help="Run evaluation")
     parser.add_argument("--config", type=str, default="default.json")
     args = parser.parse_args()
 
@@ -29,9 +30,12 @@ def main():
     else:
         raise ValueError(f"Invalid model type: {config['model']['type']}")
 
-    if args.mode == "train":
+    assert args.train or args.eval, "Must specify either training or evaluation"
+    assert not (args.train and args.eval), "Cannot specify both training and evaluation"
+
+    if args.train:
         train(model, config)
-    elif args.mode == "eval":
+    elif args.eval:
         eval(model, config)
 
 if __name__ == "__main__":
