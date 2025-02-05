@@ -27,13 +27,13 @@ class Attention(nn.Module):
         self.config = config
         
         self.d_embed = config.d_embed
-        self.n_head = config.n_head
-        self.d_attn = config.d_embed if hasattr(config, 'use_square_attention_heads') and config.use_square_attention_heads else config.d_embed // config.n_head
+        self.n_heads = config.n_heads
+        self.d_attn = config.d_embed if hasattr(config, 'use_square_attention_headss') and config.use_square_attention_headss else config.d_embed // config.n_heads
 
-        self.W_q = nn.Linear(self.d_embed, self.d_attn * self.n_head, bias=False)
-        self.W_k = nn.Linear(self.d_embed, self.d_attn * self.n_head, bias=False)
-        self.W_v = nn.Linear(self.d_embed, self.d_attn * self.n_head, bias=False)
-        self.W_o = nn.Linear(self.d_attn * self.n_head, self.d_embed, bias=False)
+        self.W_q = nn.Linear(self.d_embed, self.d_attn * self.n_heads, bias=False)
+        self.W_k = nn.Linear(self.d_embed, self.d_attn * self.n_heads, bias=False)
+        self.W_v = nn.Linear(self.d_embed, self.d_attn * self.n_heads, bias=False)
+        self.W_o = nn.Linear(self.d_attn * self.n_heads, self.d_embed, bias=False)
 
         if hasattr(config, 'attn_fn') and config.attn_fn == 'linear':
             self.attn_fn = linear_attention_scores
@@ -42,7 +42,7 @@ class Attention(nn.Module):
         else:
             self.attn_fn = softmax_attention_scores
 
-        self.gamma = nn.Parameter(torch.ones(self.n_head)) if hasattr(config, 'use_rbf_attention') and config.use_rbf_attention else None
+        self.gamma = nn.Parameter(torch.ones(self.n_heads)) if hasattr(config, 'use_rbf_attention') and config.use_rbf_attention else None
         self.scale = 1.0 / math.sqrt(self.d_attn)
 
         self.attn_dropout = nn.Dropout(config.dropout)
@@ -65,18 +65,18 @@ class Attention(nn.Module):
         if v is None:
             v = q
         
-        q = self.W_q(q) # (B, S, d_attn * n_head)
-        k = self.W_k(k) # (B, S, d_attn * n_head)
-        v = self.W_v(v) # (B, S, d_attn * n_head)
+        q = self.W_q(q) # (B, S, d_attn * n_heads)
+        k = self.W_k(k) # (B, S, d_attn * n_heads)
+        v = self.W_v(v) # (B, S, d_attn * n_heads)
 
-        q = q.view(B, S, self.n_head, self.d_attn).transpose(1, 2) # (B, n_head, S, d_attn)
-        k = k.view(B, S, self.n_head, self.d_attn).transpose(1, 2) # (B, n_head, S, d_attn)
-        v = v.view(B, S, self.n_head, self.d_attn).transpose(1, 2) # (B, n_head, S, d_attn)
+        q = q.view(B, S, self.n_heads, self.d_attn).transpose(1, 2) # (B, n_heads, S, d_attn)
+        k = k.view(B, S, self.n_heads, self.d_attn).transpose(1, 2) # (B, n_heads, S, d_attn)
+        v = v.view(B, S, self.n_heads, self.d_attn).transpose(1, 2) # (B, n_heads, S, d_attn)
     
-        attn_scores = self.attn_fn(q, k, self.scale, self.gamma) # (B, n_head, S, S)
+        attn_scores = self.attn_fn(q, k, self.scale, self.gamma) # (B, n_heads, S, S)
         attn_scores = self.attn_dropout(attn_scores)
 
-        out = attn_scores @ v # (B, n_head, S, d_attn)
+        out = attn_scores @ v # (B, n_heads, S, d_attn)
         out = out.transpose(1, 2).contiguous().view(B, S, self.d_embed) # (B, S, d_embed)
         out = self.W_o(out) # (B, S, d_embed)
         out = self.proj_dropout(out)
