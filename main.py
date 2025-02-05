@@ -23,11 +23,11 @@ def main():
     parser.add_argument("--eval", action="store_true", help="Run evaluation")
     parser.add_argument("--config", type=str, default="default.json")
     args = parser.parse_args()
-
-    config = json.load(f"configs/{args.config}")
+    config = json.load(open(f"configs/{args.config}"))
     if config["model"]["type"] == "gpt":
         model = GPT(config["model"])
     else:
+
         raise ValueError(f"Invalid model type: {config['model']['type']}")
 
     assert args.train or args.eval, "Must specify either training or evaluation"
