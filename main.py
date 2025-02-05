@@ -10,7 +10,7 @@ from types import SimpleNamespace
 def load_checkpoint(model, checkpoint_path):
     checkpoint = torch.load(checkpoint_path)
     epoch = checkpoint["epoch"]
-    model.load_state_dict(checkpoint["model"])
+    model.load_state_dict(checkpoint["model_state_dict"])
     print(f"Loaded checkpoint from {checkpoint_path} with epoch {epoch}")
     return model
 

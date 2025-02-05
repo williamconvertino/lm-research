@@ -91,7 +91,7 @@ class Trainer:
             val_perplexity = math.exp(val_loss)
             
             print(f"\nEpoch {epoch} complete. Train Loss: {avg_train_loss:.4f}, "
-                  f"Val Loss: {val_loss:.4f}, Val Perplexity: {val_perplexity:.2f}")
+                f"Val Loss: {val_loss:.4f}, Val Perplexity: {val_perplexity:.2f}")
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
