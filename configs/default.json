@@ -1,0 +1,18 @@
+{
+    "model": {
+        "type": "gpt",
+        "vocab_size": 50257,
+        "max_seq_len": 128,
+        "d_embed": 128,
+        "n_layers": 4,
+        "n_heads": 4,
+        "dropout": 0.1
+    },
+    "training": {
+        "batch_size": 32,
+        "learning_rate": 0.001,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "patience": 5
+    }
+}
