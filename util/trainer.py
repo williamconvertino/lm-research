@@ -99,7 +99,7 @@ class Trainer:
                     'model_state_dict': self.model.state_dict(),
                     'optimizer_state_dict': self.optimizer.state_dict(),
                     'val_loss': val_loss,
-                }, "best_model.pt")
+                }, f"{self.model.config.name}.pt")
                 print(f"Saved new best model with Val Loss: {best_val_loss:.4f}")
                 self.early_stopping_counter = 0
             else:
