@@ -34,7 +34,10 @@ class Trainer:
         # Choose first GPU with at least 10GB of free memory 
         for i in range(torch.cuda.device_count()):
             props = torch.cuda.get_device_properties(i)
-            free_memory = torch.cuda.memory_reserved(i) - torch.cuda.memory_allocated(i)
+            gpu = torch.device(f'cuda:{i}')
+            free_memory, total_memory = torch.cuda.mem_get_info(gpu)
+            total_memory = int(total_memory / 1024**3)
+            free_memory = int(free_memory / 1024**3)  
             if free_memory > 10e9:
                 print(f"Using GPU [{i}]: {props.name} with {free_memory:.2f}GB")
                 return torch.device(f'cuda:{i}')
