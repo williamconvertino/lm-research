@@ -9,8 +9,8 @@ def generate_text_temperature(model, tokenizer, prompt, max_length=50, temperatu
     input_size = input_ids.size(1)
     
     for _ in range(max_length):
-        if generated.size(1) > model.max_seq_len:
-            input_ids = generated[:, -model.max_seq_len:]  # Trim input to model's max sequence length
+        if generated.size(1) > model.config.max_seq_len:
+            input_ids = generated[:, -model.config.max_seq_len:]  # Trim input to model's max sequence length
         else:
             input_ids = generated
 
@@ -36,8 +36,8 @@ def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, de
         new_beams = []
         
         for seq, score in beams:
-            if seq.size(1) > model.max_seq_len:
-                seq_input = seq[:, -model.max_seq_len:]
+            if seq.size(1) > model.config.max_seq_len:
+                seq_input = seq[:, -model.config.max_seq_len:]
             else:
                 seq_input = seq
             
