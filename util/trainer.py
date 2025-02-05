@@ -35,10 +35,10 @@ class Trainer:
         for i in range(torch.cuda.device_count()):
             props = torch.cuda.get_device_properties(i)
             if props.total_memory > 10e9:
-                print(f"Using GPU: {props.name}")
+                print(f"Using GPU [{i}]: {props.name}")
                 return torch.device(f'cuda:{i}')
-        return torch.device('cuda')
-
+        raise RuntimeError("No GPU with at least 10GB of free memory found")
+    
     def evaluate(self, data_loader):
         self.model.eval()
         total_loss = 0.0
