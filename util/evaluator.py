@@ -63,10 +63,10 @@ def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, de
     return tokenizer.decode(best_seq[0].tolist()[input_size:])
 
 class Evaluator:
-    def __init__(self, model, config, test_dataloader, tokenizer):
+    def __init__(self, model, config, test_loader, tokenizer):
         self.model = model
         self.config = config
-        self.test_dataloader = test_dataloader
+        self.test_loader = test_loader
         self.tokenizer = tokenizer
 
         self.device = self.get_device()
@@ -80,10 +80,10 @@ class Evaluator:
     
     def show_generations(self, num_prompts=10):
         prompts = []
-        indices = random.sample(range(len(self.test_dataset)), num_prompts)
+        indices = random.sample(range(len(self.test_loader)), num_prompts)
         
         for idx in indices:
-            example = self.test_dataset[idx]["input_ids"]
+            example = self.test_loader[idx]["input_ids"]
             prompt_text = self.tokenizer.decode(example.tolist()[:50])  # Use first 50 tokens as prompt
             prompts.append(prompt_text)
         
@@ -97,10 +97,10 @@ class Evaluator:
 
     def show_beams(self, num_prompts=10):
         prompts = []
-        indices = random.sample(range(len(self.test_dataset)), num_prompts)
+        indices = random.sample(range(len(self.test_loader)), num_prompts)
         
         for idx in indices:
-            example = self.test_dataset[idx]["input_ids"]
+            example = self.test_loader[idx]["input_ids"]
             prompt_text = self.tokenizer.decode(example.tolist()[:50])
             prompts.append(prompt_text)
 
