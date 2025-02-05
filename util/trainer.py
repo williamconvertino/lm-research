@@ -20,9 +20,6 @@ class Trainer:
             weight_decay=config.weight_decay
         )
         
-        warmup_steps = 1000  # Fixed warmup steps, since we don't have set epochs
-        self.scheduler = self.get_scheduler(warmup_steps)
-        
         # Early stopping parameters
         self.patience = config.get('patience', 5)
         self.early_stopping_counter = 0
@@ -35,16 +32,6 @@ class Trainer:
             return torch.device('cpu')
         print("Using GPU")
         return torch.device('cuda')
-
-    def get_scheduler(self, warmup_steps):
-        from transformers import get_scheduler
-        estimated_total_steps = 100000
-        return get_scheduler(
-            "cosine_with_warmup",
-            self.optimizer,
-            num_warmup_steps=warmup_steps,
-            num_training_steps=estimated_total_steps
-        )
 
     def evaluate(self, data_loader):
         self.model.eval()
@@ -88,7 +75,6 @@ class Trainer:
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
                 
                 self.optimizer.step()
-                self.scheduler.step()
 
                 epoch_loss += loss.item()
                 
