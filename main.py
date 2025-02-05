@@ -49,11 +49,11 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--train", action="store_true", help="Run training")
     parser.add_argument("--eval", action="store_true", help="Run evaluation")
-    parser.add_argument("--config", type=str, default="default.json")
+    parser.add_argument("--config", type=str, default="default")
     parser.add_argument("--eval_type", type=str, default="beam", choices=["beam", "greedy"])
     args = parser.parse_args()
     
-    config_dict = json.load(open(f"configs/{args.config}"))
+    config_dict = json.load(open(f"configs/{args.config}.json"))
     config = dict_to_namespace(config_dict)
     
     if config.model.type == "gpt":
