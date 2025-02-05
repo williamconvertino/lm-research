@@ -38,6 +38,8 @@ class Trainer:
             if free_memory > 10e9:
                 print(f"Using GPU [{i}]: {props.name} with {free_memory:.2f}GB")
                 return torch.device(f'cuda:{i}')
+            else:
+                print(f"GPU [{i}]: {props.name} only has {free_memory:.2f}GB free memory, skipping")
         raise RuntimeError("No GPU with at least 10GB of free memory found")
     
     def evaluate(self, data_loader):
