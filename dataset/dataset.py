@@ -1,4 +1,4 @@
-from dataset import load_dataset
+from datasets import load_dataset
 from transformers import GPT2TokenizerFast
 import torch
 from torch.utils.data import Dataset, DataLoader
