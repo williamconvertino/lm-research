@@ -81,8 +81,7 @@ class Attention(nn.Module):
         k = k.view(B, S, self.n_heads, self.d_attn).transpose(1, 2) # (B, n_heads, S, d_attn)
         v = v.view(B, S, self.n_heads, self.d_attn).transpose(1, 2) # (B, n_heads, S, d_attn)
     
-        # Create causal mask
-        causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool()
+        causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().logical_not()
         causal_mask = causal_mask.to(q.device)
 
         attn_scores = self.attn_fn(q, k, self.scale, self.gamma, causal_mask) # (B, n_heads, S, S)

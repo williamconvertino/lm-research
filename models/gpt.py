@@ -34,10 +34,10 @@ class GPT(nn.Module):
         p = self.position_embedding(torch.arange(S).to(x.device)) # (S, d_embed)
         p = p.unsqueeze(0).repeat(B, 1, 1) # (B, S, d_embed)
         x = e + p # (B, S, d_embed)
-
+        
         for block in self.transformer_blocks:
             x = block(x)
-
+        
         x = self.ln_f(x)
 
         logits = self.lm_head(x)
