@@ -96,11 +96,10 @@ class Evaluator:
 
     def show_beams(self, num_prompts=10):
         prompts = []
-        indices = random.sample(range(len(self.test_loader)), num_prompts)
-        
-        for idx in indices:
-            example = self.test_loader[idx]["input_ids"]
-            prompt_text = self.tokenizer.decode(example.tolist()[:50])
+            
+        for batch in self.test_loader:
+            example = batch["input_ids"][0]
+            prompt_text = self.tokenizer.decode(example.tolist()[:50])  # Use first 50 tokens as prompt
             prompts.append(prompt_text)
 
         for prompt in prompts:
