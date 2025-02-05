@@ -2,7 +2,7 @@ import random
 import torch
 import torch.nn.functional as F
 
-def generate_text_temperature(model, tokenizer, prompt, max_length=50, temperature=1.0, device="cpu"):
+def generate_text_temperature(model, tokenizer, prompt, max_length=50, temperature=1.0, device="gpu"):
     model.eval()
     input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
     generated = input_ids
@@ -10,7 +10,7 @@ def generate_text_temperature(model, tokenizer, prompt, max_length=50, temperatu
     
     for _ in range(max_length):
         if generated.size(1) > model.config.max_seq_len:
-            input_ids = generated[:, -model.config.max_seq_len:]  # Trim input to model's max sequence length
+            input_ids = generated[:, -model.config.max_seq_len:]
         else:
             input_ids = generated
 
@@ -19,14 +19,14 @@ def generate_text_temperature(model, tokenizer, prompt, max_length=50, temperatu
         probabilities = F.softmax(next_token_logits, dim=-1)
         
         next_token = torch.multinomial(probabilities, num_samples=1)
-        generated = torch.cat((generated, next_token), dim=1)
+        generated = torch.cat((generated, next_token), dim=1).to(device)
         
         if next_token.item() == tokenizer.eos_token_id:
             break
     
     return tokenizer.decode(generated[0].tolist()[input_size:])
 
-def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, device="cpu"):
+def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, device="gpu"):
     model.eval()
     input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
     input_size = input_ids.size(1)
@@ -49,7 +49,7 @@ def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, de
             
             for i in range(beam_width):
                 next_token = topk_indices[0, i].unsqueeze(0).unsqueeze(0)
-                new_seq = torch.cat([seq, next_token], dim=1)
+                new_seq = torch.cat([seq, next_token], dim=1).to(device)
                 new_score = score + topk_log_probs[0, i].item()
                 new_beams.append((new_seq, new_score))
         
