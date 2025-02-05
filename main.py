@@ -7,17 +7,12 @@ from util.evaluator import Evaluator
 from dataset.dataset import get_dataloaders, get_tokenizer
 from types import SimpleNamespace
 
-def load_checkpoint(model, optimizer, checkpoint_path):
-    try:
-        checkpoint = torch.load(checkpoint_path)
-    except:
-        print("Failed to load checkpoint")
-        return None
+def load_checkpoint(model, checkpoint_path):
+    checkpoint = torch.load(checkpoint_path)
     epoch = checkpoint["epoch"]
     model.load_state_dict(checkpoint["model"])
-    optimizer.load_state_dict(checkpoint["optimizer"])
     print(f"Loaded checkpoint from {checkpoint_path} with epoch {epoch}")
-    return model, optimizer
+    return model
 
 def dict_to_namespace(d):
     for k, v in d.items():
@@ -36,6 +31,8 @@ def train(model, config):
     trainer.train()
 
 def eval(model, config, eval_type=None):
+    checkpoint_path = f"checkpoints/{config.model.name}.pt"
+    model = load_checkpoint(model, checkpoint_path)
     tokenizer = get_tokenizer()
     train_loader, val_loader, test_loader = get_dataloaders(
         tokenizer,

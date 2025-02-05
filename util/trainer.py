@@ -1,4 +1,5 @@
 import time
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -94,12 +95,13 @@ class Trainer:
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
+                os.mkdir("checkpoints", exist_ok=True)
                 torch.save({
                     'epoch': epoch,
                     'model_state_dict': self.model.state_dict(),
                     'optimizer_state_dict': self.optimizer.state_dict(),
                     'val_loss': val_loss,
-                }, f"{self.model.config.name}.pt")
+                }, f"checkpoints/{self.model.config.name}.pt")
                 print(f"Saved new best model with Val Loss: {best_val_loss:.4f}")
                 self.early_stopping_counter = 0
             else:
