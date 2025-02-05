@@ -16,8 +16,8 @@ class Trainer:
 
         self.optimizer = optim.AdamW(
             self.model.parameters(),
-            lr=config["learning_rate"],
-            weight_decay=config["weight_decay"]
+            lr=config.learning_rate,
+            weight_decay=config.weight_decay
         )
         
         warmup_steps = 1000  # Fixed warmup steps, since we don't have set epochs
