@@ -31,7 +31,8 @@ class GPT(nn.Module):
         B, S = x.shape
 
         e = self.token_embedding(x) # (B, S, d_embed)
-        p = self.position_embedding(torch.arange(S)) # (S, d_embed)
+        p = self.position_embedding(torch.arange(S).to(x.device)) # (S, d_embed)
+        p = p.unsqueeze(0).repeat(B, 1, 1) # (B, S, d_embed)
         x = e + p # (B, S, d_embed)
 
         for block in self.transformer_blocks:
