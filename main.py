@@ -2,7 +2,7 @@ import json
 from argparse import ArgumentParser
 from models.gpt import GPT
 from util.trainer import Trainer
-from datasets.dataset import get_dataloaders, get_tokenizer
+from dataset.dataset import get_dataloaders, get_tokenizer
 
 def train(model, config):
     tokenizer = get_tokenizer()
