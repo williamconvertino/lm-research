@@ -9,7 +9,7 @@
         "n_heads": 4,
         "dropout": 0.1
     },
-    "data": {
+    "dataset": {
         "type": "tinystories"
     },
     "training": {
