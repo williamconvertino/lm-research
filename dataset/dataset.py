@@ -1,61 +1,99 @@
-from datasets import load_dataset, concatenate_datasets, DatasetDict
-from transformers import GPT2TokenizerFast
+import os
+import random
+import math
 import torch
-from torch.utils.data import Dataset, DataLoader
+import numpy as np
+from tqdm import tqdm
+from datasets import IterableDataset
 
-class TextDataset(Dataset):
-    def __init__(self, token_ids, max_seq_len):
-        self.max_seq_len = max_seq_len
-        self.examples = []
-        for i in range(0, len(token_ids) - max_seq_len, max_seq_len):
-            self.examples.append(token_ids[i:i+max_seq_len])
+class Dataset(IterableDataset):
     
+    def __init__(self, file_path, context_size, stride=0.5, batch_size=64, shuffle=True, shuffle_buffer_size=1024):
+        
+        self.file_path = file_path
+        self.context_size = context_size
+        self.stride = int(context_size * stride)
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.shuffle_buffer_size = shuffle_buffer_size
+        
+        self.data = np.memmap(file_path, dtype='int32', mode='r')
+        self.file_size = os.path.getsize(self.file_path) // np.dtype('int32').itemsize
+
     def __len__(self):
-        return len(self.examples)
+        num_windows = self.file_size / self.context_size
+        num_windows = math.floor((num_windows * 2) - 1) # Account for sliding window overlap
+        return math.ceil(num_windows / self.batch_size)
     
-    def __getitem__(self, idx):
-        return {"input_ids": torch.tensor(self.examples[idx], dtype=torch.long)}
+    def __iter__(self):
+        
+        read_pointer = 0
+        buffer = []
+        batch = []
 
+        # Pseudo-shuffling mechanism that chooses random elements from the buffer 
+        def pop_buffer():
+            pop_index = random.randint(0, len(buffer) - 1) if self.shuffle else 0
+            return torch.tensor(buffer.pop(pop_index))
+        
+        while read_pointer + self.context_size < len(self.data):
+            chunk = self.data[read_pointer: read_pointer + self.context_size]
+            if len(chunk) < self.context_size:
+                break
+            buffer.append(chunk)
+            read_pointer += self.stride
+            if len(buffer) == self.shuffle_buffer_size:
+                batch.append(pop_buffer())
+            if len(batch) == self.batch_size:
+                batch_tensor = torch.stack(batch)
+                batch = []
+                yield batch_tensor.long()
+        
+        while len(buffer) > 0:
+            batch.append(pop_buffer())
+            if len(batch) == self.batch_size:
+                batch_tensor = torch.stack(batch)
+                batch = []
+                yield batch_tensor.long()
+                    
+            if len(batch) > 0:
+                yield torch.stack(batch).long()
 
-def build_dataset_splits(dataset, val_size=10000, test_size=10000):
-    if isinstance(dataset, DatasetDict):
-        dataset = concatenate_datasets([dataset[split] for split in dataset.keys()])
+def preprocess(examples, tokenizer):
+    # Remove unwanted characters
+    uc_translation_table = str.maketrans('', '', '�â€œ™')
+    texts = [text.translate(uc_translation_table) for text in examples['text']]
     
-    train_val_split = dataset.train_test_split(test_size=val_size, shuffle=True)
-    train_test_split = train_val_split['train'].train_test_split(test_size=test_size, shuffle=True)
+    # Tokenize text and add EOS token to the end of each sequence
+    tokenized_texts = tokenizer(texts, return_attention_mask=False)
+    examples['input_ids'] = [example + [tokenizer.eos_token_id] for example in tokenized_texts['input_ids']]
+    return examples
+
+def generate_data_file(dataset, file_path, tokenizer, buffer_size=1024):
     
-    dataset = DatasetDict({
-        'train': train_test_split['train'],
-        'valid': train_test_split['test'],
-        'test': train_val_split['test']
-    })
+    # Preprocess data
+    dataset = dataset.map(lambda x: Dataset.preprocess(x, tokenizer), batched=True, remove_columns=['text'])
+    file_size = sum([len(example) for example in dataset['input_ids']])
     
-    return dataset
-
-def prepare_datasets(tokenizer, max_seq_len, cache_dir="./data"):
-    dataset = load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt")['train']
-
-    dataset = build_dataset_splits(dataset)
-
-    tokenized_datasets = {}
-    for split in ["train", "valid", "test"]:
-        texts = dataset[split]["text"]
-        full_text = "\n\n".join(texts)
-        tokens = tokenizer.encode(full_text)
-        tokenized_datasets[split] = tokens
+    # Initialize memmap array
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    memmap_array = np.memmap(file_path, dtype='int32', mode='w+', shape=(file_size,))
     
-    train_dataset = TextDataset(tokenized_datasets["train"], max_seq_len)
-    val_dataset = TextDataset(tokenized_datasets["valid"], max_seq_len)
-    test_dataset = TextDataset(tokenized_datasets["test"], max_seq_len)
+    # Write data to memmap array
+    buffer = []
+    write_pointer = 0
     
-    return train_dataset, val_dataset, test_dataset
-
-def get_tokenizer():
-    return GPT2TokenizerFast.from_pretrained("gpt2")
-
-def get_dataloaders(tokenizer, max_seq_len, batch_size, cache_dir="./data"):
-    train_dataset, val_dataset, test_dataset = prepare_datasets(tokenizer, max_seq_len, cache_dir)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size)
-    return train_loader, val_loader, test_loader
+    for sequence in tqdm(dataset['input_ids'], desc='Generating dataset files'):
+        buffer.extend(sequence)
+        if len(buffer) >= buffer_size:
+            memmap_array[write_pointer: write_pointer + len(buffer)] = buffer
+            write_pointer += len(buffer)
+            buffer = []
+    
+    if len(buffer) > 0:
+        memmap_array[write_pointer: write_pointer + len(buffer)] = buffer
+        write_pointer += len(buffer)
+        buffer = []
+        
+    memmap_array.flush()
+    return memmap_array

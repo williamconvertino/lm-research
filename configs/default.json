@@ -9,6 +9,9 @@
         "n_heads": 4,
         "dropout": 0.1
     },
+    "data": {
+        "type": "tinystories"
+    },
     "training": {
         "batch_size": 32,
         "learning_rate": 0.001,

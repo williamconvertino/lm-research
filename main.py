@@ -18,7 +18,7 @@ from models.gpt import GPT
 from models.gpt2 import GPT2
 from util.trainer import Trainer
 from util.evaluator import Evaluator
-from dataset.dataset import get_dataloaders, get_tokenizer
+from dataset.tinystories_dataset import get_ts_tokenizer, get_ts_dataloaders
 from types import SimpleNamespace
 
 def load_checkpoint(model, checkpoint_path):
@@ -35,14 +35,21 @@ def dict_to_namespace(d):
             d[k] = dict_to_namespace(v)
     return SimpleNamespace(**d)
 
+def get_dataset(config):
+    if config.dataset.type == "tinystories":
+        tokenizer = get_ts_tokenizer()
+        train_loader, val_loader, test_loader = get_ts_dataloaders(
+            tokenizer,
+            config.model.max_seq_len,
+            config.training.batch_size
+        )
+    else :
+        raise ValueError(f"Invalid dataset type: {config.dataset.type}")
+    return tokenizer, train_loader, val_loader, test_loader
+
 def train(model, config):
-    print(f"Training model [{config.model.name}]")
-    tokenizer = get_tokenizer()
-    train_loader, val_loader, test_loader = get_dataloaders(
-        tokenizer,
-        config.model.max_seq_len,
-        config.training.batch_size
-    )
+    print(f"Training model [{config.model.name}] on dataset [{config.dataset.type}]")
+    _, train_loader, val_loader, _ = get_dataset(config)
     trainer = Trainer(model, config.training, train_loader, val_loader)
     trainer.train()
 
@@ -50,12 +57,7 @@ def eval(model, config, eval_type=None):
     print(f"Evaluating model [{config.model.name}]")
     checkpoint_path = f"checkpoints/{config.model.name}.pt"
     model = load_checkpoint(model, checkpoint_path)
-    tokenizer = get_tokenizer()
-    train_loader, val_loader, test_loader = get_dataloaders(
-        tokenizer,
-        config.model.max_seq_len,
-        config.training.batch_size
-    )
+    tokenizer, _, _, test_loader = get_dataset(config)
     evaluator = Evaluator(model, config, test_loader, tokenizer)
     if eval_type == "beam":
         evaluator.show_beams()
