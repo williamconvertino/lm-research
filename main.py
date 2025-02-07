@@ -1,13 +1,4 @@
 import os
-import torch
-import json
-from argparse import ArgumentParser
-from models.gpt import GPT
-from models.gpt2 import GPT2
-from util.trainer import Trainer
-from util.evaluator import Evaluator
-from dataset.dataset import get_dataloaders, get_tokenizer
-from types import SimpleNamespace
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'cache')
 
@@ -18,6 +9,18 @@ def setup_cache_dir():
     os.environ['TRANSFORMERS_CACHE'] = f'{CACHE_DIR}/transformers'
     os.environ['HF_DATASETS_CACHE'] = f'{CACHE_DIR}/datasets'
     os.environ['TMPDIR'] = f'{CACHE_DIR}'
+
+setup_cache_dir()
+
+import torch
+import json
+from argparse import ArgumentParser
+from models.gpt import GPT
+from models.gpt2 import GPT2
+from util.trainer import Trainer
+from util.evaluator import Evaluator
+from dataset.dataset import get_dataloaders, get_tokenizer
+from types import SimpleNamespace
 
 def load_checkpoint(model, checkpoint_path):
     checkpoint = torch.load(checkpoint_path)
@@ -61,7 +64,6 @@ def eval(model, config, eval_type=None):
         evaluator.show_generations()
 
 def main():
-    setup_cache_dir()
     parser = ArgumentParser()
     parser.add_argument("--train", action="store_true", help="Run training")
     parser.add_argument("--eval", action="store_true", help="Run evaluation")
