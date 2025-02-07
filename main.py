@@ -33,12 +33,13 @@ def dict_to_namespace(d, d_default=None):
     for k, v in d.items():
         if isinstance(v, dict):
             d[k] = dict_to_namespace(v)
-    for k, v in d_default.items():
-        if k not in d:
-            if isinstance(v, dict):
-                d[k] = dict_to_namespace(v)
-            else:
-                d[k] = v
+    if d_default is not None:    
+        for k, v in d_default.items():
+            if k not in d:
+                if isinstance(v, dict):
+                    d[k] = dict_to_namespace(v)
+                else:
+                    d[k] = v
     return SimpleNamespace(**d)
 
 def get_dataset(config):
