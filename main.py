@@ -2,6 +2,7 @@ import torch
 import json
 from argparse import ArgumentParser
 from models.gpt import GPT
+from models.gpt2 import GPT2
 from util.trainer import Trainer
 from util.evaluator import Evaluator
 from dataset.dataset import get_dataloaders, get_tokenizer
@@ -60,6 +61,8 @@ def main():
     
     if config.model.type == "gpt":
         model = GPT(config.model)
+    elif config.model.type == "gpt2":
+        model = GPT2(config.model)
     else:
         raise ValueError(f"Invalid model type: {config.model.type}")
 
