@@ -1,4 +1,4 @@
-from datasets import load_dataset
+from datasets import load_dataset, concatenate_datasets
 from transformers import GPT2TokenizerFast
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -17,7 +17,10 @@ class TextDataset(Dataset):
         return {"input_ids": torch.tensor(self.examples[idx], dtype=torch.long)}
 
 def prepare_datasets(tokenizer, max_seq_len, cache_dir="./data"):
-    dataset = load_dataset("wikitext", "wikitext-2-raw-v1", cache_dir=cache_dir)
+    dataset = concatenate_datasets([
+        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt")['train'],
+        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt")['train']
+    ])
     tokenized_datasets = {}
     for split in ["train", "validation", "test"]:
         texts = dataset[split]["text"]
