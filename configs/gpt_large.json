@@ -1,11 +1,11 @@
 {
     "model": {
-        "name": "large",
+        "name": "gpt_large",
         "type": "gpt",
         "vocab_size": 50257,
         "max_seq_len": 256,
-        "d_embed": 512,
-        "n_layers": 6,
+        "d_embed": 1024,
+        "n_layers": 4,
         "n_heads": 8,
         "dropout": 0.1
     },
@@ -14,7 +14,6 @@
         "learning_rate": 0.001,
         "weight_decay": 0.01,
         "grad_clip": 1.0,
-        "patience": 5,
-        "save_period": 0.25
+        "patience": 5
     }
 }
