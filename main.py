@@ -9,13 +9,15 @@ from util.evaluator import Evaluator
 from dataset.dataset import get_dataloaders, get_tokenizer
 from types import SimpleNamespace
 
-def setup_cache_dir(dir = "./data"):
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    os.environ['HF_HOME'] = f'{dir}'
-    os.environ['TRANSFORMERS_CACHE'] = f'{dir}/transformers'
-    os.environ['HF_DATASETS_CACHE'] = f'{dir}/datasets'
-    os.environ['TMPDIR'] = f'{dir}'
+CACHE_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'cache')
+
+def setup_cache_dir():
+    if not os.path.exists(CACHE_DIR):
+        os.makedirs(CACHE_DIR)
+    os.environ['HF_HOME'] = f'{CACHE_DIR}'
+    os.environ['TRANSFORMERS_CACHE'] = f'{CACHE_DIR}/transformers'
+    os.environ['HF_DATASETS_CACHE'] = f'{CACHE_DIR}/datasets'
+    os.environ['TMPDIR'] = f'{CACHE_DIR}'
 
 def load_checkpoint(model, checkpoint_path):
     checkpoint = torch.load(checkpoint_path)
