@@ -33,22 +33,19 @@ def build_dataset_splits(dataset, val_size=10000, test_size=10000):
     return dataset
 
 def prepare_datasets(tokenizer, max_seq_len, cache_dir="./data"):
-    dataset = concatenate_datasets([
-        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt")['train'],
-        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt")['train']
-    ])
+    dataset = load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt")['train']
 
     dataset = build_dataset_splits(dataset)
 
     tokenized_datasets = {}
-    for split in ["train", "validation", "test"]:
+    for split in ["train", "valid", "test"]:
         texts = dataset[split]["text"]
         full_text = "\n\n".join(texts)
         tokens = tokenizer.encode(full_text)
         tokenized_datasets[split] = tokens
     
     train_dataset = TextDataset(tokenized_datasets["train"], max_seq_len)
-    val_dataset = TextDataset(tokenized_datasets["validation"], max_seq_len)
+    val_dataset = TextDataset(tokenized_datasets["valid"], max_seq_len)
     test_dataset = TextDataset(tokenized_datasets["test"], max_seq_len)
     
     return train_dataset, val_dataset, test_dataset
