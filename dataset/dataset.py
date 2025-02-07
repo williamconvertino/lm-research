@@ -34,8 +34,8 @@ def build_dataset_splits(dataset, val_size=10000, test_size=10000):
 
 def prepare_datasets(tokenizer, max_seq_len, cache_dir="./data"):
     dataset = concatenate_datasets([
-        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt", cache_dir=cache_dir)['train'],
-        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt", cache_dir=cache_dir)['train']
+        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt")['train'],
+        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt")['train']
     ])
 
     dataset = build_dataset_splits(dataset)
