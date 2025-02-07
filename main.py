@@ -6,7 +6,6 @@ def setup_cache_dir():
     if not os.path.exists(CACHE_DIR):
         os.makedirs(CACHE_DIR)
     os.environ['HF_HOME'] = f'{CACHE_DIR}'
-    os.environ['TRANSFORMERS_CACHE'] = f'{CACHE_DIR}/transformers'
     os.environ['HF_DATASETS_CACHE'] = f'{CACHE_DIR}/datasets'
     os.environ['TMPDIR'] = f'{CACHE_DIR}'
 
