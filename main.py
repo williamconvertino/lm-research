@@ -1,3 +1,4 @@
+import os
 import torch
 import json
 from argparse import ArgumentParser
@@ -8,8 +9,17 @@ from util.evaluator import Evaluator
 from dataset.dataset import get_dataloaders, get_tokenizer
 from types import SimpleNamespace
 
+def setup_cache_dir(dir = "./data"):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    os.environ['HF_HOME'] = f'{dir}'
+    os.environ['TRANSFORMERS_CACHE'] = f'{dir}/transformers'
+    os.environ['HF_DATASETS_CACHE'] = f'{dir}/datasets'
+    os.environ['TMPDIR'] = f'{dir}'
+
 def load_checkpoint(model, checkpoint_path):
     checkpoint = torch.load(checkpoint_path)
+
     epoch = checkpoint["epoch"]
     model.load_state_dict(checkpoint["model_state_dict"])
     print(f"Loaded checkpoint from {checkpoint_path} with epoch {epoch}")
@@ -49,6 +59,7 @@ def eval(model, config, eval_type=None):
         evaluator.show_generations()
 
 def main():
+    setup_cache_dir()
     parser = ArgumentParser()
     parser.add_argument("--train", action="store_true", help="Run training")
     parser.add_argument("--eval", action="store_true", help="Run evaluation")
