@@ -1,17 +1,16 @@
 import os
 from datasets import load_dataset, concatenate_datasets
 from transformers import GPT2TokenizerFast
-from .dataset import Dataset
+from .dataset import Dataset, DATASET_DIR
 from torch.utils.data import DataLoader
 
 HUGGINGFACE_PATH = 'roneneldan/TinyStories'
-DATASET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../data/datasets/TinyStories')
 
 class TinyStoriesDataset(Dataset):
     
     def __init__(self, tokenizer, split, context_size, stride=0.5, batch_size=64):
     
-        file_path = f'{DATASET_DIR}/{split}.bin'    
+        file_path = f'{DATASET_DIR}/tinystories/{split}.bin'    
         
         if not os.path.exists(file_path):
 
@@ -29,9 +28,9 @@ class TinyStoriesDataset(Dataset):
             train_dataset = train_val_split['train']
             val_dataset = train_val_split['test']
 
-            Dataset.generate_data_file(train_dataset, f'{DATASET_DIR}/train.bin', tokenizer)
-            Dataset.generate_data_file(test_dataset, f'{DATASET_DIR}/test.bin', tokenizer)
-            Dataset.generate_data_file(val_dataset, f'{DATASET_DIR}/val.bin', tokenizer)
+            Dataset.generate_data_file(train_dataset, f'{DATASET_DIR}/tinystories/train.bin', tokenizer)
+            Dataset.generate_data_file(test_dataset, f'{DATASET_DIR}/tinystories/test.bin', tokenizer)
+            Dataset.generate_data_file(val_dataset, f'{DATASET_DIR}/tinystories/val.bin', tokenizer)
     
         super().__init__(file_path, context_size)
 
