@@ -29,10 +29,16 @@ def load_checkpoint(model, checkpoint_path):
     print(f"Loaded checkpoint from {checkpoint_path} with epoch {epoch}")
     return model
 
-def dict_to_namespace(d):
+def dict_to_namespace(d, d_default=None):
     for k, v in d.items():
         if isinstance(v, dict):
             d[k] = dict_to_namespace(v)
+    for k, v in d_default.items():
+        if k not in d:
+            if isinstance(v, dict):
+                d[k] = dict_to_namespace(v)
+            else:
+                d[k] = v
     return SimpleNamespace(**d)
 
 def get_dataset(config):
@@ -73,7 +79,8 @@ def main():
     args = parser.parse_args()
     
     config_dict = json.load(open(f"configs/{args.config}.json"))
-    config = dict_to_namespace(config_dict)
+    default_dict = json.load(open(f"configs/default.json"))
+    config = dict_to_namespace(config_dict, default_dict)
     
     if config.model.type == "gpt":
         model = GPT(config.model)
