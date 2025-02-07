@@ -29,9 +29,9 @@ class TinyStoriesDataset(Dataset):
             train_dataset = train_val_split['train']
             val_dataset = train_val_split['test']
 
-        Dataset.generate_data_file(train_dataset, f'{DATASET_DIR}/train.bin', tokenizer)
-        Dataset.generate_data_file(test_dataset, f'{DATASET_DIR}/test.bin', tokenizer)
-        Dataset.generate_data_file(val_dataset, f'{DATASET_DIR}/val.bin', tokenizer)
+            Dataset.generate_data_file(train_dataset, f'{DATASET_DIR}/train.bin', tokenizer)
+            Dataset.generate_data_file(test_dataset, f'{DATASET_DIR}/test.bin', tokenizer)
+            Dataset.generate_data_file(val_dataset, f'{DATASET_DIR}/val.bin', tokenizer)
     
         super().__init__(file_path, context_size)
 

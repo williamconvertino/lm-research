@@ -17,6 +17,7 @@
         "learning_rate": 0.001,
         "weight_decay": 0.01,
         "grad_clip": 1.0,
-        "patience": 5
+        "patience": 5,
+        "record_interval": 0.25
     }
 }
