@@ -18,9 +18,10 @@ class TextDataset(Dataset):
 
 def prepare_datasets(tokenizer, max_seq_len, cache_dir="./data"):
     dataset = concatenate_datasets([
-        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt")['train'],
-        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt")['train']
+        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt", cache_dir=cache_dir)['train'],
+        load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt", cache_dir=cache_dir)['train']
     ])
+
     tokenized_datasets = {}
     for split in ["train", "validation", "test"]:
         texts = dataset[split]["text"]
