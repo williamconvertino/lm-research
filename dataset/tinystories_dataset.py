@@ -5,20 +5,17 @@ from .dataset import Dataset
 from torch.utils.data import DataLoader
 
 HUGGINGFACE_PATH = 'roneneldan/TinyStories'
-
 DATASET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../data/datasets/TinyStories')
 
 class TinyStoriesDataset(Dataset):
     
     def __init__(self, tokenizer, split, context_size, stride=0.5, batch_size=64):
     
-        self.name = f'TinyStories_{split}_({tokenizer.name})'
-        
-        file_path = f'{DATASET_DIR}/{tokenizer.name}/{split}.bin'    
+        file_path = f'{DATASET_DIR}/{split}.bin'    
         
         if not os.path.exists(file_path):
 
-            print(f'Creating {self.name} dataset file...')
+            print(f'Creating TinyStories [{split}] dataset files...')
             
             dataset = load_dataset(HUGGINGFACE_PATH, cache_dir=f'{DATASET_DIR}/raw')
             dataset = concatenate_datasets([dataset['train'], dataset['validation']])
@@ -32,9 +29,9 @@ class TinyStoriesDataset(Dataset):
             train_dataset = train_val_split['train']
             val_dataset = train_val_split['test']
 
-        Dataset.generate_data_file(train_dataset, f'{DATASET_DIR}/{tokenizer.name}/train.bin', tokenizer)
-        Dataset.generate_data_file(test_dataset, f'{DATASET_DIR}/{tokenizer.name}/test.bin', tokenizer)
-        Dataset.generate_data_file(val_dataset, f'{DATASET_DIR}/{tokenizer.name}/val.bin', tokenizer)
+        Dataset.generate_data_file(train_dataset, f'{DATASET_DIR}/train.bin', tokenizer)
+        Dataset.generate_data_file(test_dataset, f'{DATASET_DIR}/test.bin', tokenizer)
+        Dataset.generate_data_file(val_dataset, f'{DATASET_DIR}/val.bin', tokenizer)
     
         super().__init__(file_path, context_size)
 
