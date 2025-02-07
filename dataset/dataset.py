@@ -1,4 +1,4 @@
-from datasets import load_dataset, concatenate_datasets
+from datasets import load_dataset, concatenate_datasets, DatasetDict
 from transformers import GPT2TokenizerFast
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -16,11 +16,29 @@ class TextDataset(Dataset):
     def __getitem__(self, idx):
         return {"input_ids": torch.tensor(self.examples[idx], dtype=torch.long)}
 
+
+def build_dataset_splits(dataset, val_size=10000, test_size=10000):
+    if isinstance(dataset, DatasetDict):
+        dataset = concatenate_datasets([dataset[split] for split in dataset.keys()])
+    
+    train_val_split = dataset.train_test_split(test_size=val_size, shuffle=True)
+    train_test_split = train_val_split['train'].train_test_split(test_size=test_size, shuffle=True)
+    
+    dataset = DatasetDict({
+        'train': train_test_split['train'],
+        'valid': train_test_split['test'],
+        'test': train_val_split['test']
+    })
+    
+    return dataset
+
 def prepare_datasets(tokenizer, max_seq_len, cache_dir="./data"):
     dataset = concatenate_datasets([
         load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt", cache_dir=cache_dir)['train'],
         load_dataset("text", data_files="https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt", cache_dir=cache_dir)['train']
     ])
+
+    dataset = build_dataset_splits(dataset)
 
     tokenized_datasets = {}
     for split in ["train", "validation", "test"]:
