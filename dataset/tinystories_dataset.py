@@ -37,7 +37,7 @@ class TinyStoriesDataset(Dataset):
 def get_ts_tokenizer():
     return GPT2TokenizerFast.from_pretrained("gpt2")
 
-def get_ts_dataloaders(tokenizer, max_seq_len, batch_size):
+def get_ts_dataloaders(tokenizer, max_seq_len):
     
     train_dataset = TinyStoriesDataset(tokenizer, 'train', max_seq_len)
     val_dataset = TinyStoriesDataset(tokenizer, 'val', max_seq_len)
