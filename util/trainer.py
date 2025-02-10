@@ -3,7 +3,6 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from tqdm.auto import tqdm
 import math
 
 class Trainer:
@@ -70,9 +69,8 @@ class Trainer:
 
         while True:
             epoch_loss = 0.0
-            progress_bar = tqdm(enumerate(self.train_loader), desc=f"Epoch {epoch}", total=len(self.train_loader))
-            
-            for batch in progress_bar:
+
+            for idx, batch in enumerate(self.train_loader):
                 input_ids = batch["input_ids"].to(self.device)
                 if input_ids.size(1) < 2:
                     continue  
@@ -92,10 +90,8 @@ class Trainer:
                 
                 # Calculate and display perplexity
                 perplexity = math.exp(loss.item())
-                progress_bar.set_postfix({
-                    'loss': f"{loss.item():.4f}",
-                    'ppl': f"{perplexity:.2f}"
-                })
+                
+                print(f"Epoch {epoch} Batch {idx} Loss: {loss.item():.4f}, Perplexity: {perplexity:.2f}")
 
             avg_train_loss = epoch_loss / len(self.train_loader)
             val_loss = self.evaluate(self.val_loader)
