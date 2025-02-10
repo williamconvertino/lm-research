@@ -43,8 +43,8 @@ def get_ts_dataloaders(tokenizer, max_seq_len, batch_size):
     val_dataset = TinyStoriesDataset(tokenizer, 'val', max_seq_len)
     test_dataset = TinyStoriesDataset(tokenizer, 'test', max_seq_len)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size)
+    train_loader = DataLoader(train_dataset)
+    val_loader = DataLoader(val_dataset)
+    test_loader = DataLoader(test_dataset)
     
     return train_loader, val_loader, test_loader
