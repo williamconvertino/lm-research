@@ -8,7 +8,7 @@ from datasets import IterableDataset
 
 DATASET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/datasets')
 
-class Dataset(IterableDataset):
+class DiskDataset(IterableDataset):
     
     def __init__(self, file_path, context_size, stride=0.5, batch_size=64, shuffle=True, shuffle_buffer_size=1024):
         

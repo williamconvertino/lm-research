@@ -18,7 +18,7 @@ from models.gpt import GPT
 from models.gpt2 import GPT2
 from util.trainer import Trainer
 from util.evaluator import Evaluator
-from dataset.tinystories_dataset import get_ts_tokenizer, get_ts_dataloaders
+from dataset.tinystories_dataset import get_ts_tokenizer, get_ts_datasets
 from types import SimpleNamespace
 
 def load_checkpoint(model, checkpoint_path):
@@ -45,7 +45,7 @@ def dict_to_namespace(d, d_default=None):
 def get_dataset(config):
     if config.dataset.type == "tinystories":
         tokenizer = get_ts_tokenizer()
-        train_loader, val_loader, test_loader = get_ts_dataloaders(
+        train_loader, val_loader, test_loader = get_ts_datasets(
             tokenizer,
             config.model.max_seq_len,
             config.training.batch_size
