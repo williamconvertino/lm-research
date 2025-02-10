@@ -70,7 +70,7 @@ class Trainer:
 
         while True:
             epoch_loss = 0.0
-            progress_bar = tqdm(enumerate(self.train_loader), desc=f"Epoch {epoch}", total=len(self.train_loader))
+            progress_bar = tqdm(self.train_loader, desc=f"Epoch {epoch}")
             
             for batch in progress_bar:
                 input_ids = batch["input_ids"].to(self.device)
