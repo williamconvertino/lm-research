@@ -8,7 +8,7 @@ HUGGINGFACE_PATH = 'roneneldan/TinyStories'
 
 class TinyStoriesDataset(Dataset):
     
-    def __init__(self, tokenizer, split, context_size, stride=0.5, batch_size=64):
+    def __init__(self, tokenizer, split, context_size, stride=0.5, batch_size=64, shuffle=True, shuffle_buffer_size=1024):
     
         file_path = f'{DATASET_DIR}/tinystories/{split}.bin'    
         
@@ -32,7 +32,7 @@ class TinyStoriesDataset(Dataset):
             Dataset.generate_data_file(test_dataset, f'{DATASET_DIR}/tinystories/test.bin', tokenizer)
             Dataset.generate_data_file(val_dataset, f'{DATASET_DIR}/tinystories/val.bin', tokenizer)
     
-        super().__init__(file_path, context_size)
+        super().__init__(file_path, context_size, stride, batch_size, shuffle, shuffle_buffer_size)
 
 def get_ts_tokenizer():
     return GPT2TokenizerFast.from_pretrained("gpt2")
@@ -43,7 +43,7 @@ def get_ts_dataloaders(tokenizer, max_seq_len, batch_size):
     val_dataset = TinyStoriesDataset(tokenizer, 'val', max_seq_len)
     test_dataset = TinyStoriesDataset(tokenizer, 'test', max_seq_len)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size)
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
     
