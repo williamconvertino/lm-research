@@ -21,7 +21,7 @@ class Trainer:
         self.val_loader = splits["val"]
         self.device = self._get_device()
 
-        self.num_training_steps = self.max_epochs * len(self.train_loader)
+        self.num_training_steps = len(self.train_loader)
         self.num_val_steps = int(self.num_training_steps * self.val_interval_multiplier)
         self.early_stopping_counter = 0
 
