@@ -1,7 +1,7 @@
 import os
 from datasets import load_dataset, concatenate_datasets
-from transformers import GPT2TokenizerFast
 from .disk_dataset import DiskDataset, DATASET_DIR
+from .tokenizer import Tokenizer
 
 HUGGINGFACE_PATH = 'roneneldan/TinyStories'
 
@@ -32,9 +32,6 @@ class TinyStoriesDataset(DiskDataset):
             DiskDataset.generate_data_file(val_dataset, f'{DATASET_DIR}/tinystories/val.bin', tokenizer)
     
         super().__init__(file_path, context_size, stride, batch_size, shuffle, shuffle_buffer_size)
-
-def get_ts_tokenizer():
-    return GPT2TokenizerFast.from_pretrained("gpt2")
 
 def get_ts_datasets(tokenizer, max_seq_len, batch_size):
     

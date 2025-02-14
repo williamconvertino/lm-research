@@ -5,21 +5,21 @@ class Tokenizer:
     pat_str = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"
 
     def __init__(self):
-
         tokenizer_base = tiktoken.get_encoding("r50k_base")
         num_base_tokens = len(tokenizer_base)
 
-        self.bos_token = "<|begin_of_text|>"
-        self.eos_token = "<|end_of_text|>"
-
         special_tokens = [
-            self.bos_token,
-            self.eos_token
+            "<|begin_of_text|>",
+            "<|end_of_text|>"
         ]
 
         self.special_tokens = {
             token: i + num_base_tokens for i, token in enumerate(special_tokens)
         }
+
+        self.eos_id = self.special_tokens["<|end_of_text|>"]
+        self.bos_id = self.special_tokens["<|begin_of_text|>"]
+        self.pad_id = -1
 
         self.tokenizer = tiktoken.Encoding(
             name="tokenizer",
@@ -28,18 +28,33 @@ class Tokenizer:
             special_tokens=self.special_tokens
         )
     
-    def encode(self, text, eos=True, bos=True):
-        
+    def _encode(self, text, eos=False, bos=False):
         sequence = []
+        
         if bos:
             sequence.append(self.special_tokens["<|begin_of_text|>"])
-
+        
         sequence.extend(self.tokenizer.encode(text))
 
         if eos:
             sequence.append(self.special_tokens["<|end_of_text|>"])
-
+        
         return sequence
 
+    def encode(self, text, eos=False, bos=False):
+        if isinstance(text, str):
+            return self._encode(text, eos, bos)
+        elif isinstance(text, list):
+            return [self._encode(t, eos, bos) for t in text]
+        else:
+            raise ValueError(f"Invalid input type: {type(text)}, expected str or list")
+
     def decode(self, sequence):
-        return self.tokenizer.decode(sequence)
+        if len(sequence) == 0:
+            return ''
+        if isinstance(sequence[0], list):
+            return [self.tokenizer.decode(s) for s in sequence]
+        elif isinstance(sequence[0], int):
+            return self.tokenizer.decode(sequence)
+        else:
+            raise ValueError(f"Invalid input type: {type(sequence)}, expected list of lists or list of ints")

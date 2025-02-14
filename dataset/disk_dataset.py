@@ -4,71 +4,83 @@ import math
 import torch
 import numpy as np
 from tqdm import tqdm
-from datasets import IterableDataset
 
 DATASET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/datasets')
 
-class DiskDataset(IterableDataset):
+class DiskDataset:
     
-    def __init__(self, file_path, context_size, stride=0.5, batch_size=64, shuffle=True, shuffle_buffer_size=1024):
+    uc_translation_table = str.maketrans('', '', '�â€œ™') # Table to remove unwanted characters
+
+    stride_multiplier = 0.5
+    shuffle_buffer_size=1024
+
+    def __init__(self, file_path, tokenizer, context_size, batch_size=64, do_shuffle=True):
         
         self.file_path = file_path
+        self.tokenizer = tokenizer
         self.context_size = context_size
-        self.stride = int(context_size * stride)
+        self.stride = int(context_size * self.stride_multiplier)
         self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.shuffle_buffer_size = shuffle_buffer_size
+        self.do_shuffle = do_shuffle
         
         self.data = np.memmap(file_path, dtype='int32', mode='r')
         self.file_size = os.path.getsize(self.file_path) // np.dtype('int32').itemsize
 
     def __len__(self):
-        num_windows = self.file_size / self.context_size
-        num_windows = math.floor((num_windows * 2) - 1) # Account for sliding window overlap
+        num_windows = (self.file_size - self.context_size) // self.stride + 1
         return math.ceil(num_windows / self.batch_size)
     
     def __iter__(self):
-        
         read_pointer = 0
         buffer = []
         batch = []
 
-        # Pseudo-shuffling mechanism that chooses random elements from the buffer 
         def pop_buffer():
-            pop_index = random.randint(0, len(buffer) - 1) if self.shuffle else 0
-            return torch.tensor(buffer.pop(pop_index))
-        
-        while read_pointer + self.context_size < len(self.data):
-            chunk = self.data[read_pointer: read_pointer + self.context_size]
-            if len(chunk) < self.context_size:
-                break
+            pop_index = random.randint(0, len(buffer) - 1) if self.do_shuffle else 0 # Randomly select index if shuffling is enabled
+            seq = buffer.pop(pop_index).copy()
+            eos_id = self.tokenizer.eos_id
+            pad_id = self.tokenizer.pad_id
+
+            # Replace all tokens after an EOS with the pad token.
+            indices = np.where(seq == eos_id)[0]
+            if indices.size > 0:
+                first_eos = indices[0]
+                seq[first_eos + 1 :] = pad_id
+            return torch.tensor(seq)
+
+        # Read chunks from the memmapped data until there isn’t enough left.
+        while read_pointer + self.context_size <= len(self.data):
+            chunk = self.data[read_pointer : read_pointer + self.context_size].copy()
             buffer.append(chunk)
             read_pointer += self.stride
-            if len(buffer) == self.shuffle_buffer_size:
-                batch.append(pop_buffer())
-            if len(batch) == self.batch_size:
-                batch_tensor = torch.stack(batch)
-                batch = []
-                yield batch_tensor.long()
-        
-        while len(buffer) > 0:
+
+            # When the buffer is full enough, drain enough sequences into a batch.
+            if len(buffer) >= self.shuffle_buffer_size:
+                while buffer and len(batch) < self.batch_size:
+                    batch.append(pop_buffer())
+                if len(batch) == self.batch_size:
+                    yield torch.stack(batch).long()
+                    batch = []
+
+        # Drain any remaining sequences in the buffer.
+        while buffer:
             batch.append(pop_buffer())
             if len(batch) == self.batch_size:
-                batch_tensor = torch.stack(batch)
-                batch = []
-                yield batch_tensor.long()
-                    
-            if len(batch) > 0:
                 yield torch.stack(batch).long()
+                batch = []
+        
+        # If there’s an incomplete batch left, yield it just once.
+        if batch:
+            yield torch.stack(batch).long()
+
 
     def preprocess(examples, tokenizer):
         # Remove unwanted characters
-        uc_translation_table = str.maketrans('', '', '�â€œ™')
-        texts = [text.translate(uc_translation_table) for text in examples['text']]
+        texts = [text.translate(DiskDataset.uc_translation_table) for text in examples['text']]
+    
+        # Tokenize text and add EOS and BOS tokens to each sequence
+        examples['input_ids'] = tokenizer.encode(texts, eos=True, bos=True)
         
-        # Tokenize text and add EOS token to the end of each sequence
-        tokenized_texts = tokenizer(texts, return_attention_mask=False)
-        examples['input_ids'] = [example + [tokenizer.eos_token_id] for example in tokenized_texts['input_ids']]
         return examples
 
     def generate_data_file(dataset, file_path, tokenizer, buffer_size=1024):
