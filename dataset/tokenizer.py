@@ -6,7 +6,7 @@ class Tokenizer:
 
     def __init__(self):
         tokenizer_base = tiktoken.get_encoding("r50k_base")
-        num_base_tokens = len(tokenizer_base)
+        num_base_tokens = tokenizer_base.n_vocab
 
         special_tokens = [
             "<|begin_of_text|>",
