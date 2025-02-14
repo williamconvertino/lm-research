@@ -40,7 +40,7 @@ class August(nn.Module):
     def forward(self, x, targets=None):
         B, S = x.shape
 
-        e = self.token_embedding(x) # (B, S, d_embed)
+        e = self.embedding(x) # (B, S, d_embed)
         
         x = torch.cat([torch.zeros_like(e), e, e], dim=-1) # (B, S, 3 * aug_d_embed)
 
