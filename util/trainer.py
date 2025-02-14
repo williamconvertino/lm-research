@@ -61,14 +61,21 @@ class Trainer:
         if not torch.cuda.is_available():
             print("CUDA not available, using CPU")
             return torch.device('cpu')
-        # Choose first GPU with at least 10GB of free memory 
+        # Choose first GPU with sufficient memory
+        def estimate_vram_usage():
+            model_size_bytes = sum(p.numel() for p in self.model.parameters()) * 4
+            model_size_gb = model_size_bytes / (1024 ** 3)
+            optimizer_adjusted_gb = model_size_gb * 2.0 # Adam uses ~2x model size
+            return optimizer_adjusted_gb
+        vram_usage = estimate_vram_usage()
+        print(f"Estimated VRAM usage: {vram_usage:.2f}GB")
         for i in range(torch.cuda.device_count()):
             props = torch.cuda.get_device_properties(i)
             gpu = torch.device(f'cuda:{i}')
             free_memory, total_memory = torch.cuda.mem_get_info(gpu)
             total_memory = int(total_memory / 1024**3)
             free_memory = int(free_memory / 1024**3)  
-            if free_memory > 10:
+            if free_memory > vram_usage:
                 print(f"Using GPU [{i}]: {props.name} with {free_memory:.2f}GB")
                 return torch.device(f'cuda:{i}')
             else:
