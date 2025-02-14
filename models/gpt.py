@@ -84,7 +84,7 @@ class TransformerBlock(nn.Module):
         self.feed_forward = FeedForward(d_embed)
         
     def forward(self, x):
-        x = x + self.attention(x)
+        x = x + self.attention(x, x, x)
         x = x + self.feed_forward(x)
         return x
 
