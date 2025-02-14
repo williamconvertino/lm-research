@@ -53,7 +53,7 @@ def get_dataset(config):
     return tokenizer, train_loader, val_loader, test_loader
 
 def train(config):
-    print(f"Training model [{config.model.name}] on dataset [{config.dataset.type}]")
+    print(f"Training model [{config.model.name}]")
     model = get_model(config)
     try:
         model = load_most_recent_checkpoint(model)
