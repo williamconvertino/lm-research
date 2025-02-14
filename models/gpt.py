@@ -9,14 +9,14 @@ class GPT(nn.Module):
         super().__init__()
         self.config = config
 
-        self.token_embedding = nn.Embedding(config.vocab_size, config.d_embed)
+        self.token_embedding = nn.Embedding(config.tokenizer.vocab_size, config.d_embed)
         self.position_embedding = nn.Embedding(config.max_seq_len, config.d_embed)
 
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
 
         self.ln_f = nn.LayerNorm(config.d_embed)
 
-        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.d_embed, config.tokenizer.vocab_size, bias=False)
         self.lm_head.weight = self.token_embedding.weight
 
         self.apply(self._init_weights)
@@ -50,5 +50,5 @@ class GPT(nn.Module):
         if targets is None:
             return logits, None
     
-        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=-1)
+        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=self.tokenizer.pad_id)
         return logits, loss

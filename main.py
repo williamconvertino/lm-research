@@ -36,6 +36,7 @@ def load_model(config):
         raise ValueError(f"Model class not found: {config.type}")
     model = get_model_class()(config)
     model.name = config.name
+    model.tokenizer = config.tokenizer
     return model
 
 def train(config):
@@ -44,8 +45,7 @@ def train(config):
     checkpoint = load_most_recent_checkpoint(model)
     if checkpoint is not None:
         model.load_state_dict(checkpoint["model_state_dict"])
-    tokenizer = Tokenizer()
-    splits = TinyStoriesDataset.get_splits(tokenizer, config.max_seq_len)
+    splits = TinyStoriesDataset.get_splits(model.tokenizer, config.max_seq_len)
     trainer = Trainer(model, splits, checkpoint)
     trainer.train()
 
@@ -56,9 +56,8 @@ def eval(config, eval_flags):
     if checkpoint is None:
         raise FileNotFoundError(f"No checkpoint found for model [{config.name}], cannot evaluate")
     model.load_state_dict(checkpoint["model_state_dict"])
-    tokenizer = Tokenizer()
-    splits = TinyStoriesDataset.get_splits(tokenizer, config.max_seq_len)
-    evaluator = Evaluator(model, splits, tokenizer)
+    splits = TinyStoriesDataset.get_splits(model.tokenizer, config.max_seq_len)
+    evaluator = Evaluator(model, splits, model.tokenizer)
     if "beam" in eval_flags:
         evaluator.eval_beam()
     if "greedy" in eval_flags:
@@ -83,11 +82,15 @@ def main():
     assert args.train or args.eval, "Must specify either training or evaluation"
     assert not (args.train and args.eval), "Cannot specify both training and evaluation"
 
+    tokenizer = Tokenizer()
+
     if args.train:
         config = get_config(args.train)
+        config.tokenizer = tokenizer
         train(config)
     elif args.eval:
         config = get_config(args.eval[0])
+        config.tokenizer = tokenizer
         eval_flags = args.eval[1:] if len(args.eval) > 1 else ["greedy"]
         eval(config, eval_flags)
 

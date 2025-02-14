@@ -131,7 +131,7 @@ class Trainer:
                 self.scheduler.step()
                 train_loss = train_loss.item()
 
-                if i % self.num_val_steps == 0 or i == len(self.train_loader) - 1:
+                if i != 0 and (i % self.num_val_steps == 0 or i == len(self.train_loader) - 1):
                     val_loss = self._validate()
                     val_perplexity = math.exp(math.min(val_loss, 100))
                     step = i + epoch * len(self.train_loader)

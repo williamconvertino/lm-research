@@ -134,5 +134,5 @@ class August(nn.Module):
         if targets is None:
             return logits, None
     
-        loss = nn.functional.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1))
+        loss = nn.functional.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=self.tokenizer.pad_id)
         return logits, loss

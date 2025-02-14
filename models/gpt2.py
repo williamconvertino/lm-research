@@ -9,7 +9,7 @@ class GPT2(nn.Module):
         self.config = config
         
         config = GPT2Config(
-            vocab_size=config.vocab_size,
+            vocab_size=config.tokenizer.vocab_size,
             n_positions=config.max_seq_len,
             n_embd=config.d_embed,
             n_layer=config.n_layers,
@@ -22,5 +22,5 @@ class GPT2(nn.Module):
     def forward(self, x, targets=None):
         outputs = self.model(x)
         logits = outputs.logits
-        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=-1)
+        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=self.tokenizer.pad_id)
         return logits, loss

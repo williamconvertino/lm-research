@@ -10,7 +10,8 @@ class Tokenizer:
 
         special_tokens = [
             "<|begin_of_text|>",
-            "<|end_of_text|>"
+            "<|end_of_text|>",
+            "<|pad|>"
         ]
 
         self.special_tokens = {
@@ -19,7 +20,7 @@ class Tokenizer:
 
         self.eos_id = self.special_tokens["<|end_of_text|>"]
         self.bos_id = self.special_tokens["<|begin_of_text|>"]
-        self.pad_id = -1
+        self.pad_id = self.special_tokens["<|pad|>"]
 
         self.tokenizer = tiktoken.Encoding(
             name="tokenizer",
@@ -27,7 +28,12 @@ class Tokenizer:
             mergeable_ranks=tokenizer_base._mergeable_ranks,
             special_tokens=self.special_tokens
         )
+
+        self.vocab_size = self.tokenizer.n_vocab + len(self.special_tokens)
     
+    def __len__(self):
+        return self.vocab_size
+
     def _encode(self, text, eos=False, bos=False):
         sequence = []
         
