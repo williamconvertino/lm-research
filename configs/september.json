@@ -1,0 +1,10 @@
+{
+    "type": "september",
+    "max_seq_len": 256,
+    "d_embed": 576,
+    "n_layers": 1,
+    "n_heads": 8,
+    "dropout": 0.1,
+    "use_square_attention_heads": true,
+    "center_embeddings": true
+}
