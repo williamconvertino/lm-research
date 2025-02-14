@@ -24,7 +24,7 @@ class Tokenizer:
         self.tokenizer = tiktoken.Encoding(
             name="tokenizer",
             pat_str=self.pat_str,
-            mergeable_ranks=tokenizer_base.mergeable_ranks,
+            mergeable_ranks=tokenizer_base._mergeable_ranks,
             special_tokens=self.special_tokens
         )
     

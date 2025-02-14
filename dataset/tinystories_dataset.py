@@ -1,7 +1,6 @@
 import os
 from datasets import load_dataset, concatenate_datasets
 from .disk_dataset import DiskDataset, DATASET_DIR
-from .tokenizer import Tokenizer
 
 HUGGINGFACE_PATH = 'roneneldan/TinyStories'
 
