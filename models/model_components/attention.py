@@ -38,10 +38,10 @@ class Attention(nn.Module):
         self.n_heads = n_heads
         self.max_seq_len = max_seq_len
         
-        self.W_q = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
-        self.W_k = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
-        self.W_v = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
-        self.W_o = nn.Linear(self.d_embed * self.n_heads, self.d_embed, bias=False)
+        self.W_q = nn.Linear(self.d_embed, self.d_embed, bias=False)
+        self.W_k = nn.Linear(self.d_embed, self.d_embed, bias=False)
+        self.W_v = nn.Linear(self.d_embed, self.d_embed, bias=False)
+        self.W_o = nn.Linear(self.d_embed, self.d_embed, bias=False)
 
         self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed, self.max_seq_len)
         
