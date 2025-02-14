@@ -14,7 +14,7 @@ class DiskDataset:
     stride_multiplier = 0.5
     shuffle_buffer_size=1024
 
-    def __init__(self, file_path, tokenizer, max_seq_len, do_shuffle=False, batch_size=64, allow_overlap=True):
+    def __init__(self, file_path, tokenizer, max_seq_len, do_shuffle=False, allow_overlap=True, batch_size=64):
         
         self.file_path = file_path
         self.tokenizer = tokenizer

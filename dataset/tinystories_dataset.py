@@ -30,7 +30,7 @@ class TinyStoriesDataset(DiskDataset):
             DiskDataset.generate_data_file(test_dataset, f"{DATASET_DIR}/tinystories/test.bin", tokenizer)
             DiskDataset.generate_data_file(val_dataset, f"{DATASET_DIR}/tinystories/val.bin", tokenizer)
     
-        super().__init__(file_path, tokenizer, context_size, do_shuffle, allow_overlap)
+        super().__init__(file_path, tokenizer, context_size, do_shuffle=do_shuffle, allow_overlap=allow_overlap)
 
     def get_splits(tokenizer, max_seq_len):
         return {
