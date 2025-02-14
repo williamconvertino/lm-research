@@ -1,5 +1,5 @@
 import torch.nn as nn
-from torch.nn.functional import F
+import torch.nn.functional as F
 from .model_components.transformer_block import TransformerBlock
 from transformers import GPT2Config, GPT2LMHeadModel
 
