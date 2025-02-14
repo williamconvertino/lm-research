@@ -18,7 +18,7 @@ class Attention(nn.Module):
         self.W_v = nn.Linear(self.d_embed, self.d_embed, bias=False)
         self.out_proj = nn.Linear(self.d_embed, self.d_embed, bias=False)
 
-        self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed)
+        self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed // self.n_heads)
 
         self.attn_dropout = nn.Dropout(0.1)
         self.out_dropout = nn.Dropout(0.1)
