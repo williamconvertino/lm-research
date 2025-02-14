@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from .model_components.attention import Attention
 from .model_components.feed_forward import FeedForward
 
-class TransformerBlock(nn.Module):
+class SeptemberBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
@@ -20,14 +20,14 @@ class TransformerBlock(nn.Module):
         x = x + self.feed_forward(self.ff_norm(x))
         return x
 
-class GPT(nn.Module):
+class Semptember(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
 
         self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
         
-        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
+        self.transformer_blocks = nn.ModuleList([SeptemberBlock(config) for _ in range(config.n_layers)])
 
         self.ln_f = nn.LayerNorm(config.d_embed)
 

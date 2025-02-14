@@ -2,7 +2,6 @@ import torch
 import math
 import torch.nn as nn
 import torch.nn.functional as F
-from .model_components.embedding import TopicalEmbedding
 from .model_components.feed_forward import FeedForward
 from .model_components.attention import Attention
 
@@ -15,7 +14,7 @@ class August(nn.Module):
 
         self.embedding = nn.Embedding(config.vocab_size, self.aug_d_embed)
         
-        self.attention_blocks = nn.ModuleList([Attention(config) for _ in range(config.n_layers)])
+        self.attention_blocks = nn.ModuleList([Attention(config.d_embed, config.n_heads) for _ in range(config.n_layers)])
         self.feed_forward_blocks = nn.ModuleList([FeedForward(config.d_embed) for _ in range(config.n_layers)])
 
         self.ln_f = nn.LayerNorm(config.d_embed)

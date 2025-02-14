@@ -1,6 +1,5 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from .model_components.transformer_block import TransformerBlock
 from transformers import GPT2Config, GPT2LMHeadModel
 
 class GPT2(nn.Module):
