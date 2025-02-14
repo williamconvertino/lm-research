@@ -79,7 +79,7 @@ class TransformerBlock(nn.Module):
     def __init__(self, d_embed, n_heads):
         super().__init__()
         self.d_aug = d_embed // 3
-        self.attention = Attention(d_embed, n_heads)
+        self.attention = Attention(self.d_aug, n_heads)
         self.feed_forward = FeedForward(2 * self.d_aug, self.d_aug, d_embed)
         
     def forward(self, f, g, e):
