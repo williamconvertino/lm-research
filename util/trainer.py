@@ -136,7 +136,7 @@ class Trainer:
 
                 if i != 0 and (i % self.num_val_steps == 0 or i == len(self.train_loader) - 1):
                     val_loss = self._validate()
-                    val_perplexity = math.exp(math.min(val_loss, 100))
+                    val_perplexity = math.exp(min(val_loss, 100))
                     step = i + epoch * len(self.train_loader)
                     self.checkpoint["history"]["train_loss"].append((step, train_loss))
                     self.checkpoint["history"]["val_loss"].append((step, val_loss))
