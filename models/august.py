@@ -13,7 +13,7 @@ class August(nn.Module):
         
         self.aug_d_embed = config.d_embed // 3
 
-        self.embedding = nn.Embedding(config.vocab_size, config.aug_d_embed)
+        self.embedding = nn.Embedding(config.vocab_size, self.aug_d_embed)
         
         self.attention_blocks = nn.ModuleList([Attention(config) for _ in range(config.n_layers)])
         self.feed_forward_blocks = nn.ModuleList([FeedForward(config.d_embed) for _ in range(config.n_layers)])
