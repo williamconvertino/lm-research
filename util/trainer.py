@@ -61,11 +61,7 @@ class Trainer:
         if not torch.cuda.is_available():
             print("CUDA not available, using CPU")
             return torch.device('cpu')
-        def estimate_vram_usage(model):
-            if model.config.d_embed < 400:
-                return 10
-            return 14
-        vram_usage = estimate_vram_usage(self.model)
+        vram_usage = 14
         print(f"Estimated VRAM usage: {vram_usage:.2f}GB")
         for i in range(torch.cuda.device_count()):
             props = torch.cuda.get_device_properties(i)
