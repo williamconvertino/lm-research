@@ -118,6 +118,7 @@ class Trainer:
         start_time = time.time()
         
         val_loss = float("inf")
+        val_perplexity = float("inf")
         best_val_loss = float("inf")
 
         for epoch in range(self.checkpoint["epoch"], self.max_epochs):
@@ -139,7 +140,8 @@ class Trainer:
                     self.checkpoint["history"]["train_loss"].append((step, train_loss))
                     self.checkpoint["history"]["val_loss"].append((step, val_loss))
                     self.checkpoint["history"]["val_perplexity"].append((step, val_perplexity))
-                    time_remaining = self._get_time_remaining(i, start_time)
+                
+                time_remaining = self._get_time_remaining(i, start_time)
                 print(f"\r[Epoch {epoch} | Step {i}/{len(self.train_loader)} | {time_remaining}] train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val perplexity: {val_perplexity:.4f} | time remaining: {time_remaining}", end="")
             
             print(f"Epoch {epoch} | train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val perplexity: {val_perplexity:.4f} | best val loss: {best_val_loss:.4f} | early stopping counter: {self.early_stopping_counter}/{self.patience}")
