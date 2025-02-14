@@ -2,9 +2,9 @@ import torch
 import math
 import torch.nn as nn
 import torch.nn.functional as F
-from .model_components.embedding import TopicalEmbedding
-from .model_components.feed_forward import FeedForward
-from .model_components.attention import Attention
+from .model_util.zero_mean_embedding import TopicalEmbedding
+from .model_util.feed_forward import FeedForward
+from .model_util.attention_functions import Attention
 
 class August(nn.Module):
     def __init__(self, config):

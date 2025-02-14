@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .model_components.attention import Attention
-from .model_components.feed_forward import FeedForward
+from .model_util.attention_functions import Attention
+from .model_util.feed_forward import FeedForward
 
 class SeptemberBlock(nn.Module):
     def __init__(self, config):
