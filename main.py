@@ -9,7 +9,7 @@ def setup_cache_dir():
     os.environ["HF_DATASETS_CACHE"] = f"{CACHE_DIR}/datasets"
     os.environ["TMPDIR"] = f"{CACHE_DIR}"
 
-setup_cache_dir()
+setup_cache_dir() # Set up a local cache directory (helps when using a server with limited user storage)
 
 import torch
 import json
@@ -17,10 +17,9 @@ from argparse import ArgumentParser
 from util.trainer import Trainer
 from util.evaluator import Evaluator
 from dataset.tokenizer import Tokenizer
-from dataset.tinystories_dataset import get_ts_datasets
+from dataset.tinystories_dataset import TinyStoriesDataset
 from types import SimpleNamespace
-import inspect
-import models
+import importlib
     
 def load_most_recent_checkpoint(model):
     checkpoint_path = f"checkpoints/{model.name}.pt"
@@ -33,23 +32,19 @@ def load_most_recent_checkpoint(model):
     return model
 
 def get_model(config):
-    available_models = {
-        name.lower(): cls for name, cls in inspect.getmembers(models, inspect.isclass) if cls.__module__.startswith("models.")
-    }
-    model_type = config.model.type.lower()
-    if model_type not in available_models:
-        raise ValueError(f"Invalid model type: {config.model.type}. Available models: {list(available_models.keys())}")
-    model = available_models[model_type](config.model)
+    def get_model_class():
+        model_file = importlib.import_module(f"models.{config.model.type.lower().replace(' ', '_')}")
+        for attr in dir(model_file):
+            if attr.lower() == config.model.type.lower():
+                return getattr(model_file, attr)
+        raise ValueError(f"Model class not found: {config.model.type}")
+    model = get_model_class()(config.model)
     model.name = config.model.name
     return model
 
-def get_dataset(config):
+def get_datasets(config):
     tokenizer = Tokenizer()
-    train_loader, val_loader, test_loader = get_ts_datasets(
-        tokenizer,
-        config.model.max_seq_len,
-        config.training.batch_size
-    )
+    train_loader, val_loader, test_loader = TinyStoriesDataset.get_splits(tokenizer, config.model.max_seq_len, config.training.batch_size)
     return tokenizer, train_loader, val_loader, test_loader
 
 def train(config):
@@ -59,7 +54,7 @@ def train(config):
         model = load_most_recent_checkpoint(model)
     except FileNotFoundError:
         print(f"No checkpoint found for model [{config.model.name}], training from scratch")
-    _, train_loader, val_loader, _ = get_dataset(config)
+    _, train_loader, val_loader, _ = get_datasets(config)
     trainer = Trainer(model, config.training, train_loader, val_loader)
     trainer.train()
 
@@ -67,7 +62,7 @@ def eval(config, eval_type):
     print(f"Evaluating model [{config.model.name}]")
     model = get_model(config)
     model = load_most_recent_checkpoint(model) # Throws error if no checkpoint found
-    tokenizer, _, _, test_loader = get_dataset(config)
+    tokenizer, _, _, test_loader = get_datasets(config)
     evaluator = Evaluator(model, config, test_loader, tokenizer)
     if eval_type == "beam":
         evaluator.show_beams()

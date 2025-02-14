@@ -6,7 +6,7 @@ HUGGINGFACE_PATH = 'roneneldan/TinyStories'
 
 class TinyStoriesDataset(DiskDataset):
     
-    def __init__(self, tokenizer, split, context_size, stride=0.5, batch_size=64, shuffle=False, shuffle_buffer_size=1024):
+    def __init__(self, split, tokenizer, context_size, do_shuffle=False, batch_size=64):
     
         file_path = f'{DATASET_DIR}/tinystories/{split}.bin'    
         
@@ -30,12 +30,12 @@ class TinyStoriesDataset(DiskDataset):
             DiskDataset.generate_data_file(test_dataset, f'{DATASET_DIR}/tinystories/test.bin', tokenizer)
             DiskDataset.generate_data_file(val_dataset, f'{DATASET_DIR}/tinystories/val.bin', tokenizer)
     
-        super().__init__(file_path, context_size, stride, batch_size, shuffle, shuffle_buffer_size)
+        super().__init__(file_path, tokenizer, context_size, do_shuffle, batch_size)
 
-def get_ts_datasets(tokenizer, max_seq_len, batch_size):
-    
-    train_dataset = TinyStoriesDataset(tokenizer, 'train', max_seq_len, batch_size=batch_size, shuffle=True)
-    val_dataset = TinyStoriesDataset(tokenizer, 'val', max_seq_len, batch_size=batch_size)
-    test_dataset = TinyStoriesDataset(tokenizer, 'test', max_seq_len, batch_size=batch_size)
+    def get_splits(tokenizer, max_seq_len, batch_size):
+        
+        train_dataset = TinyStoriesDataset('train', tokenizer, max_seq_len, do_shuffle=True, batch_size=batch_size)
+        val_dataset = TinyStoriesDataset('val', tokenizer, max_seq_len, batch_size=batch_size)
+        test_dataset = TinyStoriesDataset('test', tokenizer, max_seq_len, batch_size=batch_size)
 
-    return train_dataset, val_dataset, test_dataset
+        return train_dataset, val_dataset, test_dataset

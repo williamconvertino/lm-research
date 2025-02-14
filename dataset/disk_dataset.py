@@ -14,20 +14,20 @@ class DiskDataset:
     stride_multiplier = 0.5
     shuffle_buffer_size=1024
 
-    def __init__(self, file_path, tokenizer, context_size, batch_size=64, do_shuffle=True):
+    def __init__(self, file_path, tokenizer, max_seq_len, do_shuffle=False, batch_size=64):
         
         self.file_path = file_path
         self.tokenizer = tokenizer
-        self.context_size = context_size
-        self.stride = int(context_size * self.stride_multiplier)
-        self.batch_size = batch_size
+        self.max_seq_len = max_seq_len
+        self.stride = int(max_seq_len * self.stride_multiplier)
         self.do_shuffle = do_shuffle
-        
+        self.batch_size = batch_size
+
         self.data = np.memmap(file_path, dtype='int32', mode='r')
         self.file_size = os.path.getsize(self.file_path) // np.dtype('int32').itemsize
 
     def __len__(self):
-        num_windows = (self.file_size - self.context_size) // self.stride + 1
+        num_windows = (self.file_size - self.max_seq_len) // self.stride + 1
         return math.ceil(num_windows / self.batch_size)
     
     def __iter__(self):
@@ -49,8 +49,8 @@ class DiskDataset:
             return torch.tensor(seq)
 
         # Read chunks from the memmapped data until there isn’t enough left.
-        while read_pointer + self.context_size <= len(self.data):
-            chunk = self.data[read_pointer : read_pointer + self.context_size].copy()
+        while read_pointer + self.max_seq_len <= len(self.data):
+            chunk = self.data[read_pointer : read_pointer + self.max_seq_len].copy()
             buffer.append(chunk)
             read_pointer += self.stride
 
