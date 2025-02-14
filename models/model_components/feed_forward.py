@@ -3,21 +3,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class FeedForward(nn.Module):
-    def __init__(self, config):
+    def __init__(self, d_embed, d_hidden=None):
         super().__init__()
-        
-        self.config = config
 
-        self.d_embed = config.d_embed
-        self.d_ff = config.d_ff if hasattr(config, 'd_ff') else 4 * config.d_embed
+        if d_hidden is None:
+            d_hidden = d_embed * 4
 
-        self.W_1 = nn.Linear(self.d_embed, self.d_ff, bias=False)
-        self.W_2 = nn.Linear(self.d_ff, self.d_embed, bias=False)
+        self.W_1 = nn.Linear(d_embed, d_hidden, bias=False)
+        self.W_2 = nn.Linear(d_hidden, d_embed, bias=False)
         
         self.activation = nn.GELU()
 
-        self.dropout = nn.Dropout(config.dropout)
-        self.layer_norm = nn.LayerNorm(self.d_embed)
+        self.dropout = nn.Dropout(0.1)
+        self.layer_norm = nn.LayerNorm(d_embed)
 
     def forward(self, x):
         x = self.layer_norm(x)
