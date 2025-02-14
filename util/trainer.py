@@ -140,7 +140,7 @@ class Trainer:
                     self.checkpoint["history"]["train_loss"].append((step, train_loss))
                     self.checkpoint["history"]["val_loss"].append((step, val_loss))
                     self.checkpoint["history"]["val_perplexity"].append((step, val_perplexity))
-                
+            
                 time_remaining = self._get_time_remaining(i, start_time)
                 print(f"\r[Epoch {epoch} | Step {i}/{len(self.train_loader)} | {time_remaining}] train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val perplexity: {val_perplexity:.4f} | time remaining: {time_remaining}", end="")
             
@@ -155,6 +155,7 @@ class Trainer:
                 best_val_loss = val_loss
                 self.early_stopping_counter = 0
                 self._save_checkpoint()
+                print(f"Saved checkpoint at epoch {epoch}")
             else:
                 self.early_stopping_counter += 1
             if self.early_stopping_counter >= self.patience:
