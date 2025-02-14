@@ -20,7 +20,7 @@ class SeptemberBlock(nn.Module):
         x = x + self.feed_forward(self.ff_norm(x))
         return x
 
-class Semptember(nn.Module):
+class September(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
