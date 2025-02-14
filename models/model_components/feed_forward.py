@@ -19,14 +19,6 @@ class FeedForward(nn.Module):
         self.dropout = nn.Dropout(config.dropout)
         self.layer_norm = nn.LayerNorm(self.d_embed)
 
-        self.apply(self._init_weights)
-
-    def _init_weights(self, module):
-        if isinstance(module, nn.Linear):
-            nn.init.normal_(module.weight, mean=0.0, std=0.02)
-            if module.bias is not None:
-                nn.init.zeros_(module.bias)
-
     def forward(self, x):
         x = self.layer_norm(x)
         x = self.W_1(x)

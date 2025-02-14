@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .model_components.transformer_block import TransformerBlock
+import math
 
 class GPT(nn.Module):
     def __init__(self, config):
@@ -19,10 +20,14 @@ class GPT(nn.Module):
         self.lm_head.weight = self.token_embedding.weight
 
         self.apply(self._init_weights)
-
+        
     def _init_weights(self, module):
-        if isinstance(module, nn.Linear):
-            nn.init.normal_(module.weight, mean=0.0, std=0.02)
+        if isinstance(module, nn.LayerNorm):
+            nn.init.ones_(module.weight)
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Linear):
+            nn.init.xavier_normal_(module.weight)
             if module.bias is not None:
                 nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
