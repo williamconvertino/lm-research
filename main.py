@@ -91,7 +91,7 @@ def main():
     if args.train:
         train(config)
     elif args.eval:
-        eval_flags = args.eval[1:] if len(args.eval) > 1 else ["greedy"]
+        eval_flags = args.eval[1:] if len(args.eval) > 1 else ["greedy", "beam"]
         eval(config, eval_flags)
 
 if __name__ == "__main__":
