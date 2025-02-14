@@ -1,0 +1,9 @@
+{
+    "type": "gpt",
+    "max_seq_len": 256,
+    "d_embed": 512,
+    "n_layers": 1,
+    "n_heads": 8,
+    "dropout": 0.1,
+    "use_square_attention_heads": true
+}
