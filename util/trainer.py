@@ -61,14 +61,14 @@ class Trainer:
         if not torch.cuda.is_available():
             print("CUDA not available, using CPU")
             return torch.device('cpu')
-        # Choose first GPU with sufficient memory
-        # def estimate_vram_usage():
-        #     model_size_bytes = sum(p.numel() for p in self.model.parameters()) * 4
-        #     model_size_gb = model_size_bytes / (1024 ** 3)
-        #     optimizer_adjusted_gb = model_size_gb * 2.0 # Adam uses ~2x model size
-        #     return optimizer_adjusted_gb
-        # vram_usage = estimate_vram_usage()
-        vram_usage = 14
+        def estimate_vram_usage(model):
+            param_size = sum(p.numel() * p.element_size() for p in model.parameters())
+            buffer_size = sum(b.numel() * b.element_size() for b in model.buffers())
+            total_size = param_size + buffer_size  # Total size in bytes
+            size_in_gb = total_size / (1024 ** 3)
+            size_in_gb = size_in_gb * 2.0 # Adam uses ~2x model size
+            return size_in_gb
+        vram_usage = estimate_vram_usage(self.model)
         print(f"Estimated VRAM usage: {vram_usage:.2f}GB")
         for i in range(torch.cuda.device_count()):
             props = torch.cuda.get_device_properties(i)
