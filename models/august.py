@@ -62,8 +62,8 @@ class FeedForward(nn.Module):
 
         self.ln = nn.LayerNorm(d_in)
 
-        self.fc1 = nn.Linear(d_in, 4 * self.d_embed)
-        self.fc2 = nn.Linear(4 * self.d_embed, d_out)
+        self.fc1 = nn.Linear(d_in, 4 * d_embed)
+        self.fc2 = nn.Linear(4 * d_embed, d_out)
 
         self.dropout = nn.Dropout(0.1)
 
