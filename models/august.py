@@ -110,7 +110,7 @@ class August(BaseModel):
         g = e
         f = torch.zeros_like(e, device=e.device)
         
-        for block in enumerate(self.transformer_blocks):
+        for block in self.transformer_blocks:
             f, g, e = block(f, g, e)
 
         x = self.ln_f(f)
