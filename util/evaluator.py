@@ -5,7 +5,7 @@ import torch.nn.functional as F
 def generate_text_greedy(model, tokenizer, prompt, max_length=50, temperature=1.0, device="gpu"):
     model.to(device)
     model.eval()
-    input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
+    input_ids = torch.tensor(tokenizer.encode(prompt)).to(device)
     generated = input_ids
     input_size = input_ids.size(1)
     
@@ -30,7 +30,7 @@ def generate_text_greedy(model, tokenizer, prompt, max_length=50, temperature=1.
 def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, device="gpu"):
     model.to(device)
     model.eval()
-    input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
+    input_ids = torch.tensor(tokenizer.encode(prompt)).to(device)
     input_size = input_ids.size(1)
     beams = [(input_ids, 0)] 
     
@@ -86,7 +86,10 @@ class Evaluator:
             if i >= num_prompts:
                 break
             example = batch[0]
-            prompt_text = self.tokenizer.decode(example.tolist()[:50])  # Use first 50 tokens as prompt
+            prompt = example.tolist()[:50] # Use first 50 tokens as prompt
+            # Remove all pad tokens
+            prompt = [token for token in prompt if token != self.tokenizer.pad_token_id]
+            prompt_text = self.tokenizer.decode(prompt)  
             prompts.append(prompt_text)
         
         for prompt in prompts:
