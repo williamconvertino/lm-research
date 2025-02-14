@@ -13,7 +13,7 @@ class August(nn.Module):
         
         self.aug_d_embed = config.d_embed // 3
 
-        self.embedding = TopicalEmbedding(config)
+        self.embedding = nn.Embedding(config.vocab_size, config.aug_d_embed)
         
         self.attention_blocks = nn.ModuleList([Attention(config) for _ in range(config.n_layers)])
         self.feed_forward_blocks = nn.ModuleList([FeedForward(config.d_embed) for _ in range(config.n_layers)])
@@ -40,14 +40,13 @@ class August(nn.Module):
     def forward(self, x, targets=None):
         B, S = x.shape
 
-        e = self.embedding(x) # (B, S, d_embed)
+        e = self.embedding(x) - self.embedding.weight.mean(dim=0, keepdim=True) # (B, S, d_embed)
         
         x = torch.cat([torch.zeros_like(e), e, e], dim=-1) # (B, S, 3 * aug_d_embed)
         
             
         for i in range(self.config.n_layers):
             v = torch.cat([x[:, :, self.aug_d_embed:2 * self.aug_d_embed], torch.zeros_like(x[:, :, :2 * self.aug_d_embed])], dim=-1)
-            print(x.shape)
             x = x + self.attention_blocks[i](q=x, k=x, v=v)
             
             if i < self.config.n_layers - 1:
