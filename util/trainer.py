@@ -3,30 +3,61 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim.lr_scheduler import get_cosine_schedule_with_warmup
 import math
 
 class Trainer:
-    def __init__(self, model, config, train_loader, val_loader):
-        self.model = model
-        self.config = config
-        self.train_loader = train_loader
-        self.val_loader = val_loader
+    learning_rate = 1e-4
+    weight_decay = 1e-2
+    betas = (0.9, 0.999)
+    grad_clip = 1.0
+    max_epochs = 20
+    patience = 5
+    val_interval_multiplier = 0.1
 
-        self.device = self.get_device()
+    def __init__(self, model, splits, checkpoint=None):
+        self.model = model
+        self.train_loader = splits["train"]
+        self.val_loader = splits["val"]
+        self.device = self._get_device()
+
+        self.num_training_steps = self.max_epochs * len(self.train_loader)
+        self.num_val_steps = int(self.num_training_steps * self.val_interval_multiplier)
+        self.early_stopping_counter = 0
+
+        self.num_warmup_steps = int(self.num_training_steps * 0.1)
 
         self.optimizer = optim.AdamW(
-            self.model.parameters(),
-            lr=config.learning_rate,
-            weight_decay=config.weight_decay
+            model.parameters(),
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay,
+            betas=self.betas
         )
         
-        # Early stopping parameters
-        self.patience = config.patience
-        self.early_stopping_counter = 0
-        
-        self.grad_clip = config.grad_clip
+        self.scheduler = get_cosine_schedule_with_warmup(
+            self.optimizer,
+            num_warmup_steps=self.num_warmup_steps,
+            num_training_steps=self.num_training_steps
+        )
 
-    def get_device(self):
+        self.save_path = f"checkpoints/{self.model.config.name}.pt"
+        if checkpoint is None:
+            self.checkpoint = {
+                'epoch': 0,
+                'model_state_dict': self.model.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict(),
+                'scheduler_state_dict': self.scheduler.state_dict(),
+                'history': {
+                    'train_loss': [],
+                    'train_perplexity': [],
+                    'val_loss': [],
+                    'val_perplexity': [],
+                }
+            }
+        else:
+            self.checkpoint = checkpoint
+
+    def _get_device(self):
         if not torch.cuda.is_available():
             print("CUDA not available, using CPU")
             return torch.device('cpu')
@@ -44,82 +75,78 @@ class Trainer:
                 print(f"GPU [{i}]: {props.name} only has {free_memory:.2f}GB free memory, skipping")
         raise RuntimeError("No GPU with at least 10GB of free memory found")
     
-    def evaluate(self, data_loader):
+    def _save_checkpoint(self):
+        if not os.path.exists(self.save_path):
+            os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
+        torch.save(self.checkpoint, self.save_path)
+
+    def _get_time_remaining(self, i, start_time):
+        time_per_step = (time.time() - start_time) / (i + 1)
+        time_remaining = time_per_step * (len(self.train_loader) - i)
+        hours = int(time_remaining / 3600)
+        minutes = int((time_remaining % 3600) / 60)
+        seconds = int(time_remaining % 60)
+        return f"{hours}:{minutes}:{seconds}"
+
+    def _step(self, batch):
+        input_ids = batch.to(self.device)
+        x = input_ids[:, :-1]
+        targets = input_ids[:, 1:]
+        _, loss = self.model(x, targets=targets)
+        return loss
+
+    def _validate(self):
         self.model.eval()
-        total_loss = 0.0
-        total_batches = 0
+        loss = 0.0
         with torch.no_grad():
-            for batch in data_loader:
-                input_ids = batch["input_ids"].to(self.device)
-                if input_ids.size(1) < 2:
-                    continue
-                x = input_ids[:, :-1]
-                targets = input_ids[:, 1:]
-                _, loss = self.model(x, targets=targets)
-                total_loss += loss.item()
-                total_batches += 1
-        return total_loss / total_batches if total_batches > 0 else 0.0
+            for batch in self.val_loader:
+                loss += self._step(batch).item()
+        self.model.train()
+        return loss / len(self.val_loader)
 
     def train(self):
-        self.model.to(self.device)
         self.model.train()
+        self.model.to(self.device)
         start_time = time.time()
+        
+        val_loss = float("inf")
         best_val_loss = float("inf")
-        epoch = 1
 
-        while True:
-            epoch_loss = 0.0
-
-            for idx, batch in enumerate(self.train_loader):
-                input_ids = batch["input_ids"].to(self.device)
-                if input_ids.size(1) < 2:
-                    continue  
-                x = input_ids[:, :-1]
-                targets = input_ids[:, 1:]
-
-                self.optimizer.zero_grad()
-                _, loss = self.model(x, targets=targets)
-                loss.backward()
-                
-                # Add gradient clipping
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
-                
-                self.optimizer.step()
-
-                epoch_loss += loss.item()
-                
-                # Calculate and display perplexity
-                perplexity = math.exp(loss.item())
-                
-                print(f"Epoch {epoch} Batch {idx} Loss: {loss.item():.4f}, Perplexity: {perplexity:.2f}")
-
-            avg_train_loss = epoch_loss / len(self.train_loader)
-            val_loss = self.evaluate(self.val_loader)
-            val_perplexity = math.exp(val_loss)
+        for epoch in range(self.checkpoint["epoch"], self.max_epochs):
             
-            print(f"\nEpoch {epoch} complete. Train Loss: {avg_train_loss:.4f}, "
-                f"Val Loss: {val_loss:.4f}, Val Perplexity: {val_perplexity:.2f}")
+            for i, batch in enumerate(self.train_loader):
+                train_loss = self._step(batch)
+        
+                self.optimizer.zero_grad()
+                train_loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
+                self.optimizer.step()
+                self.scheduler.step()
+                train_loss = train_loss.item()
 
+                if i % self.num_val_steps == 0 or i == len(self.train_loader) - 1:
+                    val_loss = self._validate()
+                    val_perplexity = math.exp(math.min(val_loss, 100))
+                    step = i + epoch * len(self.train_loader)
+                    self.checkpoint["history"]["train_loss"].append((step, train_loss))
+                    self.checkpoint["history"]["val_loss"].append((step, val_loss))
+                    self.checkpoint["history"]["val_perplexity"].append((step, val_perplexity))
+                    time_remaining = self._get_time_remaining(i, start_time)
+                    print(f"\r[Epoch {epoch} | Step {step}/{len(self.train_loader)} | {time_remaining}] train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val perplexity: {val_perplexity:.4f} | time remaining: {time_remaining}", end="")
+            
+            print(f"Epoch {epoch} | train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val perplexity: {val_perplexity:.4f} | best val loss: {best_val_loss:.4f} | early stopping counter: {self.early_stopping_counter}/{self.patience}")
+
+            self.checkpoint["epoch"] = epoch
+            self.checkpoint["model_state_dict"] = self.model.state_dict()
+            self.checkpoint["optimizer_state_dict"] = self.optimizer.state_dict()
+            self.checkpoint["scheduler_state_dict"] = self.scheduler.state_dict()
+            
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                if not os.path.exists("checkpoints"):
-                    os.mkdir("checkpoints")
-                torch.save({
-                    'epoch': epoch,
-                    'model_state_dict': self.model.state_dict(),
-                    'optimizer_state_dict': self.optimizer.state_dict(),
-                    'val_loss': val_loss,
-                }, f"checkpoints/{self.model.config.name}.pt")
-                print(f"Saved new best model with Val Loss: {best_val_loss:.4f}")
                 self.early_stopping_counter = 0
+                self._save_checkpoint()
             else:
                 self.early_stopping_counter += 1
-                if self.early_stopping_counter >= self.patience:
-                    print(f"Early stopping triggered after {epoch} epochs")
-                    break
-            
-            epoch += 1
-
-        total_time = time.time() - start_time
-        
-        print(f"Training complete in {total_time/60:.2f} minutes.")
+            if self.early_stopping_counter >= self.patience:
+                print(f"Early stopping triggered after {epoch} epochs")
+                break

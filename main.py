@@ -24,14 +24,10 @@ import importlib
 def load_most_recent_checkpoint(model):
     checkpoint_path = f"checkpoints/{model.name}.pt"
     if not os.path.exists(checkpoint_path):
-        raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
-    checkpoint = torch.load(checkpoint_path)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    epoch = checkpoint["epoch"]
-    print(f"Loaded checkpoint from {checkpoint_path} with epoch {epoch}")
-    return model
+        return None
+    return torch.load(checkpoint_path)
 
-def get_model(config):
+def load_model(config):
     def get_model_class():
         model_file = importlib.import_module(f"models.{config.model.type.lower().replace(' ', '_')}")
         for attr in dir(model_file):
@@ -42,53 +38,40 @@ def get_model(config):
     model.name = config.model.name
     return model
 
-def get_datasets(config):
-    tokenizer = Tokenizer()
-    train_loader, val_loader, test_loader = TinyStoriesDataset.get_splits(tokenizer, config.model.max_seq_len, config.training.batch_size)
-    return tokenizer, train_loader, val_loader, test_loader
-
 def train(config):
     print(f"Training model [{config.model.name}]")
-    model = get_model(config)
-    try:
-        model = load_most_recent_checkpoint(model)
-    except FileNotFoundError:
-        print(f"No checkpoint found for model [{config.model.name}], training from scratch")
-    _, train_loader, val_loader, _ = get_datasets(config)
-    trainer = Trainer(model, config.training, train_loader, val_loader)
+    model = load_model(config)
+    checkpoint = load_most_recent_checkpoint(model)
+    if checkpoint is not None:
+        model.load_state_dict(checkpoint["model_state_dict"])
+    tokenizer = Tokenizer()
+    splits = TinyStoriesDataset.get_splits(tokenizer, config.model.max_seq_len, config.training.batch_size)
+    trainer = Trainer(model, splits, checkpoint)
     trainer.train()
 
-def eval(config, eval_type):
-    print(f"Evaluating model [{config.model.name}]")
-    model = get_model(config)
-    model = load_most_recent_checkpoint(model) # Throws error if no checkpoint found
-    tokenizer, _, _, test_loader = get_datasets(config)
-    evaluator = Evaluator(model, config, test_loader, tokenizer)
-    if eval_type == "beam":
-        evaluator.show_beams()
-    elif eval_type == "greedy":
-        evaluator.show_generations()
-    else:
-        raise ValueError(f"Invalid evaluation type: {eval_type}")
-
-def dict_to_namespace(d, d_default=None):
-    for k, v in d.items():
-        if isinstance(v, dict):
-            d[k] = dict_to_namespace(v)
-    if d_default is not None:    
-        for k, v in d_default.items():
-            if k not in d:
-                if isinstance(v, dict):
-                    d[k] = dict_to_namespace(v)
-                else:
-                    d[k] = v
-    return SimpleNamespace(**d)
-
+def eval(config, eval_flags):
+    print(f"Evaluating model [{config.name}]")
+    model = load_model(config)
+    checkpoint = load_most_recent_checkpoint(model)
+    if checkpoint is None:
+        raise FileNotFoundError(f"No checkpoint found for model [{config.model.name}], cannot evaluate")
+    model.load_state_dict(checkpoint["model_state_dict"])
+    tokenizer = Tokenizer()
+    splits = TinyStoriesDataset.get_splits(tokenizer, config.model.max_seq_len, config.training.batch_size)
+    evaluator = Evaluator(model, splits, tokenizer)
+    if "beam" in eval_flags:
+        evaluator.eval_beam()
+    if "greedy" in eval_flags:
+        evaluator.eval_greedy()
+    
 def get_config(config_name):
-    config_dict = json.load(open(f"configs/{config_name}.json"))
-    default_dict = json.load(open(f"configs/default.json"))
-    config = dict_to_namespace(config_dict, default_dict)
-    config.model.name = config_name
+    def dict_to_namespace(d):
+        for k, v in d.items():
+            if isinstance(v, dict):
+                d[k] = dict_to_namespace(v)
+        return SimpleNamespace(**d)
+    config = dict_to_namespace(json.load(open(f"configs/{config_name}.json")))
+    config.name = config_name
     return config
 
 def main():
@@ -105,8 +88,8 @@ def main():
         train(config)
     elif args.eval:
         config = get_config(args.eval[0])
-        eval_type = args.eval[1] if len(args.eval) > 1 else "greedy"
-        eval(config, eval_type)
+        eval_flags = args.eval[1:] if len(args.eval) > 1 else ["greedy"]
+        eval(config, eval_flags)
 
 if __name__ == "__main__":
     main()

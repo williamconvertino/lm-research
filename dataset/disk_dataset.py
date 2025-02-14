@@ -5,11 +5,11 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-DATASET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/datasets')
+DATASET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../data/datasets")
 
 class DiskDataset:
     
-    uc_translation_table = str.maketrans('', '', '�â€œ™') # Table to remove unwanted characters
+    uc_translation_table = str.maketrans("", "", "�â€œ™") # Table to remove unwanted characters
 
     stride_multiplier = 0.5
     shuffle_buffer_size=1024
@@ -23,8 +23,8 @@ class DiskDataset:
         self.do_shuffle = do_shuffle
         self.batch_size = batch_size
 
-        self.data = np.memmap(file_path, dtype='int32', mode='r')
-        self.file_size = os.path.getsize(self.file_path) // np.dtype('int32').itemsize
+        self.data = np.memmap(file_path, dtype="int32", mode="r")
+        self.file_size = os.path.getsize(self.file_path) // np.dtype("int32").itemsize
 
     def __len__(self):
         num_windows = (self.file_size - self.max_seq_len) // self.stride + 1
@@ -76,28 +76,28 @@ class DiskDataset:
 
     def preprocess(examples, tokenizer):
         # Remove unwanted characters
-        texts = [text.translate(DiskDataset.uc_translation_table) for text in examples['text']]
+        texts = [text.translate(DiskDataset.uc_translation_table) for text in examples["text"]]
     
         # Tokenize text and add EOS and BOS tokens to each sequence
-        examples['input_ids'] = tokenizer.encode(texts, eos=True, bos=True)
+        examples["input_ids"] = tokenizer.encode(texts, eos=True, bos=True)
         
         return examples
 
     def generate_data_file(dataset, file_path, tokenizer, buffer_size=1024):
         
         # Preprocess data
-        dataset = dataset.map(lambda x: DiskDataset.preprocess(x, tokenizer), batched=True, remove_columns=['text'])
-        file_size = sum([len(example) for example in dataset['input_ids']])
+        dataset = dataset.map(lambda x: DiskDataset.preprocess(x, tokenizer), batched=True, remove_columns=["text"])
+        file_size = sum([len(example) for example in dataset["input_ids"]])
         
         # Initialize memmap array
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        memmap_array = np.memmap(file_path, dtype='int32', mode='w+', shape=(file_size,))
+        memmap_array = np.memmap(file_path, dtype="int32", mode="w+", shape=(file_size,))
         
         # Write data to memmap array
         buffer = []
         write_pointer = 0
         
-        for sequence in tqdm(dataset['input_ids'], desc='Generating dataset files'):
+        for sequence in tqdm(dataset["input_ids"], desc="Generating dataset files"):
             buffer.extend(sequence)
             if len(buffer) >= buffer_size:
                 memmap_array[write_pointer: write_pointer + len(buffer)] = buffer

@@ -2,7 +2,7 @@ import random
 import torch
 import torch.nn.functional as F
 
-def generate_text_temperature(model, tokenizer, prompt, max_length=50, temperature=1.0, device="gpu"):
+def generate_text_greedy(model, tokenizer, prompt, max_length=50, temperature=1.0, device="gpu"):
     model.to(device)
     model.eval()
     input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
@@ -65,10 +65,9 @@ def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, de
     return tokenizer.decode(best_seq[0].tolist()[input_size:])
 
 class Evaluator:
-    def __init__(self, model, config, test_loader, tokenizer):
+    def __init__(self, model, splits, tokenizer):
         self.model = model
-        self.config = config
-        self.test_loader = test_loader
+        self.test_loader = splits["test"]
         self.tokenizer = tokenizer
 
         self.device = self.get_device()
@@ -80,11 +79,13 @@ class Evaluator:
         print("Using GPU")
         return torch.device('cuda')
     
-    def show_generations(self, num_prompts=10):
+    def eval_greedy(self, num_prompts=10):
         prompts = []
         
-        for batch in self.test_loader:
-            example = batch["input_ids"][0]
+        for i, batch in enumerate(self.test_loader):
+            if i >= num_prompts:
+                break
+            example = batch[0]
             prompt_text = self.tokenizer.decode(example.tolist()[:50])  # Use first 50 tokens as prompt
             prompts.append(prompt_text)
         
@@ -93,14 +94,16 @@ class Evaluator:
             print(prompt)
             print("-"*50)
             print("Generation:")
-            print(generate_text_temperature(self.model, self.tokenizer, prompt, device=self.device))
+            print(generate_text_greedy(self.model, self.tokenizer, prompt, device=self.device))
             print("*"*50)
 
-    def show_beams(self, num_prompts=10):
+    def eval_beam(self, num_prompts=10):
         prompts = []
             
-        for batch in self.test_loader:
-            example = batch["input_ids"][0]
+        for i, batch in enumerate(self.test_loader):
+            if i >= num_prompts:
+                break
+            example = batch[0]
             prompt_text = self.tokenizer.decode(example.tolist()[:50])  # Use first 50 tokens as prompt
             prompts.append(prompt_text)
 
