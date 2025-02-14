@@ -1,5 +1,6 @@
 torch
 torchtune
+torchao
 tqdm
 datasets
 transformers
