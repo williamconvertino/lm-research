@@ -70,9 +70,9 @@ class Attention(nn.Module):
         k = self.W_k(k) # (B, S, d_embed * n_heads)
         v = self.W_v(v) # (B, S, d_embed * n_heads)
 
-        q = q.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_embed)
-        k = k.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_embed)
-        v = v.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_embed)
+        q = q.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_embed)
+        k = k.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_embed)
+        v = v.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_embed)
         
         q = self.rotary_embedding(q)
         k = self.rotary_embedding(k)
@@ -87,7 +87,7 @@ class Attention(nn.Module):
         attn_scores = self.attn_fn(q, k, self.scale, causal_mask, self.gamma) # (B, n_heads, S, S)
         attn_scores = self.attn_dropout(attn_scores)
         out = attn_scores @ v # (B, n_heads, S, d_embed)
-        out = out.transpose(1, 2).contiguous().view(B, S, self.n_heads * self.d_embed) # (B, S, self.n_heads * d_embed)
+        out = out.transpose(1, 2).contiguous().view(B, S, self.d_embed) # (B, S, self.n_heads * d_embed)
         out = self.W_o(out) # (B, S, d_embed)
         out = self.proj_dropout(out)
 
