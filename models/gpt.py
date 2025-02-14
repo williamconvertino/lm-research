@@ -95,7 +95,7 @@ class GPT(BaseModel):
 
         self.embedding = ZeroMeanEmbedding(config.vocab_size, config.d_embed)
         
-        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config.d_embed, config.n_heads) for _ in range(config.n_layers)])
 
         self.ln_f = nn.LayerNorm(config.d_embed)
 
