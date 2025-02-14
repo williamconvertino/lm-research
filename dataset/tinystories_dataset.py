@@ -32,7 +32,7 @@ class TinyStoriesDataset(DiskDataset):
     
         super().__init__(file_path, tokenizer, context_size, do_shuffle)
 
-    def get_splits(tokenizer, max_seq_len, batch_size):
+    def get_splits(tokenizer, max_seq_len):
         return {
             "train": TinyStoriesDataset("train", tokenizer, max_seq_len, do_shuffle=True),
             "val": TinyStoriesDataset("val", tokenizer, max_seq_len),
