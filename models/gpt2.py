@@ -1,5 +1,5 @@
-import torch
 import torch.nn as nn
+from torch.nn.functional import F
 from .model_components.transformer_block import TransformerBlock
 from transformers import GPT2Config, GPT2LMHeadModel
 
@@ -20,5 +20,7 @@ class GPT2(nn.Module):
         self.model = GPT2LMHeadModel(config)
 
     def forward(self, x, targets=None):
-        return self.model(x, targets=targets)
-        
+        outputs = self.model(x, targets=targets)
+        logits = outputs.logits
+        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=-1)
+        return logits, loss
