@@ -43,10 +43,11 @@ class August(nn.Module):
         e = self.embedding(x) # (B, S, d_embed)
         
         x = torch.cat([torch.zeros_like(e), e, e], dim=-1) # (B, S, 3 * aug_d_embed)
-
+        
             
         for i in range(self.config.n_layers):
             v = torch.cat([x[:, :, self.aug_d_embed:2 * self.aug_d_embed], torch.zeros_like(x[:, :, :2 * self.aug_d_embed])], dim=-1)
+            print(x.shape)
             x = x + self.attention_blocks[i](q=x, k=x, v=v)
             
             if i < self.config.n_layers - 1:
