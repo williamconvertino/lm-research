@@ -9,14 +9,14 @@ class GPT(nn.Module):
         super().__init__()
         self.config = config
 
-        self.token_embedding = TopicalEmbedding(config)
+        self.embedding = TopicalEmbedding(config)
         
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
 
         self.ln_f = nn.LayerNorm(config.d_embed)
 
-        self.lm_head = nn.Linear(config.d_embed, config.tokenizer.vocab_size, bias=False)
-        self.lm_head.weight = self.token_embedding.weight
+        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
+        self.lm_head.weight = self.embedding.embedding.weight
 
         self.apply(self._init_weights)
         
@@ -35,7 +35,7 @@ class GPT(nn.Module):
     def forward(self, x, targets=None):
         B, S = x.shape
 
-        x = self.token_embedding(x) # (B, S, d_embed)
+        x = self.embedding(x) # (B, S, d_embed)
         
         for block in self.transformer_blocks:
             x = block(x)

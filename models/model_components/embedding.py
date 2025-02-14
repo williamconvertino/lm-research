@@ -5,7 +5,7 @@ class TopicalEmbedding(nn.Module):
         super().__init__()
         self.config = config
         self.center_embeddings = getattr(config, 'center_embeddings', False)
-        self.embedding = nn.Embedding(config.tokenizer.vocab_size, config.d_embed)
+        self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
 
     def forward(self, x):
         if self.center_embeddings:

@@ -84,13 +84,13 @@ def main():
 
     tokenizer = Tokenizer()
 
+    config = get_config(args.train) if args.train else get_config(args.eval[0])
+    config.tokenizer = tokenizer
+    config.vocab_size = tokenizer.vocab_size
+
     if args.train:
-        config = get_config(args.train)
-        config.tokenizer = tokenizer
         train(config)
     elif args.eval:
-        config = get_config(args.eval[0])
-        config.tokenizer = tokenizer
         eval_flags = args.eval[1:] if len(args.eval) > 1 else ["greedy"]
         eval(config, eval_flags)
 

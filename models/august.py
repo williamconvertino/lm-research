@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torchtune.modules import RotaryPositionalEmbeddings
 from .model_components.attention import linear_attention_scores, rbf_attention_scores, softmax_attention_scores
 from .model_components.feed_forward import FeedForward
+from .model_components.embedding import TopicalEmbedding
 
 class AugustAttention(nn.Module):
     def __init__(self, config):
@@ -59,7 +60,6 @@ class AugustAttention(nn.Module):
         k = k.transpose(1, 2) # (B, n_heads, S, d_attn)
         v = v.transpose(1, 2) # (B, n_heads, S, d_attn)
 
-
         causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().logical_not()
         causal_mask = causal_mask.to(q.device)
 
@@ -95,16 +95,15 @@ class August(nn.Module):
         self.config = config
         
         self.aug_d_embed = config.d_embed // 3
-        self.aug_d_f = config.d_embed - (2 * self.aug_d_embed)
 
-        self.token_embedding = nn.Embedding(config.tokenizer.vocab_size, self.aug_d_embed)
+        self.embedding = TopicalEmbedding(config)
         
         self.transformer_blocks = nn.ModuleList([AugustTransformerBlock(config) for _ in range(config.n_layers)])
 
         self.ln_f = nn.LayerNorm(config.d_embed)
 
-        self.lm_head = nn.Linear(config.d_embed, config.tokenizer.vocab_size, bias=False)
-        self.lm_head.weight = self.token_embedding.weight
+        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
+        self.lm_head.weight = self.embedding.embedding.weight
 
         self.apply(self._init_weights)
         
@@ -123,8 +122,10 @@ class August(nn.Module):
     def forward(self, x, targets=None):
         B, S = x.shape
 
-        x = self.token_embedding(x) # (B, S, d_embed)
+        e = self.token_embedding(x) # (B, S, d_embed)
         
+        x = torch.cat([torch.zeros_like(e), e, e], dim=-1) # (B, S, 3 * aug_d_embed)
+
         for block in self.transformer_blocks:
             x = block(x)
         
@@ -134,5 +135,5 @@ class August(nn.Module):
         if targets is None:
             return logits, None
     
-        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=self.tokenizer.pad_id)
+        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=self.config.tokenizer.pad_id)
         return logits, loss
