@@ -21,7 +21,7 @@ class August(nn.Module):
         self.ln_f = nn.LayerNorm(config.d_embed)
 
         self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
-        self.lm_head.weight = self.embedding.embedding.weight
+        self.lm_head.weight = self.embedding.weight
 
         self.apply(self._init_weights)
         
