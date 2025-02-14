@@ -45,7 +45,7 @@ class Attention(nn.Module):
         self.W_v = nn.Linear(self.d_embed, self.d_attn * self.n_heads, bias=False)
         self.W_o = nn.Linear(self.d_attn * self.n_heads, self.d_embed, bias=False)
 
-        self.rotary_embedding = RotaryPositionalEmbeddings(config.d_attn, config.max_seq_len)
+        self.rotary_embedding = RotaryPositionalEmbeddings(self.d_attn, config.max_seq_len)
 
         if hasattr(config, 'attn_fn') and config.attn_fn == 'linear':
             self.attn_fn = linear_attention_scores
