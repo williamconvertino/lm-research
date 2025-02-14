@@ -1,6 +1,7 @@
 import math
 import torch
 import torch.nn as nn
+from torchtune.modules import RotaryPositionalEmbeddings
 
 def linear_attention_scores(q, k, scale=1.0, gamma=None, causal_mask=None):
     scores = torch.matmul(q, k.transpose(-2, -1)) * scale
@@ -38,11 +39,13 @@ class Attention(nn.Module):
         self.d_embed = config.d_embed
         self.n_heads = config.n_heads
         self.d_attn = config.d_embed if hasattr(config, 'use_square_attention_headss') and config.use_square_attention_headss else config.d_embed // config.n_heads
-
+        
         self.W_q = nn.Linear(self.d_embed, self.d_attn * self.n_heads, bias=False)
         self.W_k = nn.Linear(self.d_embed, self.d_attn * self.n_heads, bias=False)
         self.W_v = nn.Linear(self.d_embed, self.d_attn * self.n_heads, bias=False)
         self.W_o = nn.Linear(self.d_attn * self.n_heads, self.d_embed, bias=False)
+
+        self.rotary_embedding = RotaryPositionalEmbeddings(config.d_embed, config.max_seq_len)
 
         if hasattr(config, 'attn_fn') and config.attn_fn == 'linear':
             self.attn_fn = linear_attention_scores
@@ -69,10 +72,18 @@ class Attention(nn.Module):
         k = self.W_k(k) # (B, S, d_attn * n_heads)
         v = self.W_v(v) # (B, S, d_attn * n_heads)
 
-        q = q.view(B, S, self.n_heads, self.d_attn).transpose(1, 2) # (B, n_heads, S, d_attn)
-        k = k.view(B, S, self.n_heads, self.d_attn).transpose(1, 2) # (B, n_heads, S, d_attn)
-        v = v.view(B, S, self.n_heads, self.d_attn).transpose(1, 2) # (B, n_heads, S, d_attn)
-    
+        q = q.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_attn)
+        k = k.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_attn)
+        v = v.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_attn)
+        
+        q = self.rotary_embedding(q)
+        k = self.rotary_embedding(k)
+
+        q = q.transpose(1, 2) # (B, n_heads, S, d_attn)
+        k = k.transpose(1, 2) # (B, n_heads, S, d_attn)
+        v = v.transpose(1, 2) # (B, n_heads, S, d_attn)
+
+
         causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().logical_not()
         causal_mask = causal_mask.to(q.device)
 

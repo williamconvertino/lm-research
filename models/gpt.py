@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .model_components.transformer_block import TransformerBlock
-import math
 
 class GPT(nn.Module):
     def __init__(self, config):
@@ -10,8 +9,7 @@ class GPT(nn.Module):
         self.config = config
 
         self.token_embedding = nn.Embedding(config.tokenizer.vocab_size, config.d_embed)
-        self.position_embedding = nn.Embedding(config.max_seq_len, config.d_embed)
-
+        
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
 
         self.ln_f = nn.LayerNorm(config.d_embed)
@@ -36,10 +34,7 @@ class GPT(nn.Module):
     def forward(self, x, targets=None):
         B, S = x.shape
 
-        e = self.token_embedding(x) # (B, S, d_embed)
-        p = self.position_embedding(torch.arange(S).to(x.device)) # (S, d_embed)
-        p = p.unsqueeze(0).repeat(B, 1, 1) # (B, S, d_embed)
-        x = e + p # (B, S, d_embed)
+        x = self.token_embedding(x) # (B, S, d_embed)
         
         for block in self.transformer_blocks:
             x = block(x)
