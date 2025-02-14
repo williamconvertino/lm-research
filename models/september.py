@@ -12,11 +12,19 @@ class SeptemberBlock(nn.Module):
         self.attention = Attention(config.d_embed, config.n_heads)
         self.feed_forward = FeedForward(config.d_embed)
         
-        self.attn_norm = nn.LayerNorm(config.d_embed)
+        self.attn_norm_1 = nn.LayerNorm(config.d_embed)
+        self.attn_norm_2 = nn.LayerNorm(config.d_embed)
         self.ff_norm = nn.LayerNorm(config.d_embed)
 
     def forward(self, x):
-        x = x + self.attention(self.attn_norm(x))
+        B, S, _ = x.shape
+        k = x[:, :-1, :]
+        q = v = x[:, 1:, :]
+        k = self.attn_norm_1(k)
+        q = self.attn_norm_2(q)
+        v = self.attn_norm_2(v)
+        attn_out = self.attention(q, k, v)
+        x = x + torch.cat([torch.zeros(B, 1, self.config.d_embed), attn_out], dim=1)
         x = x + self.feed_forward(self.ff_norm(x))
         return x
 
@@ -59,6 +67,9 @@ class September(nn.Module):
         for block in self.transformer_blocks:
             x = block(x)
         
+        x = x[:, 1:, :]
+        targets = targets[:, 1:]
+
         x = self.ln_f(x)
 
         logits = self.lm_head(x)

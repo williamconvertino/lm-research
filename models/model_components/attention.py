@@ -80,15 +80,14 @@ class Attention(nn.Module):
         q = q.transpose(1, 2) # (B, n_heads, S, d_embed)
         k = k.transpose(1, 2) # (B, n_heads, S, d_embed)
         v = v.transpose(1, 2) # (B, n_heads, S, d_embed)
-
+  
         causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().logical_not()
         causal_mask = causal_mask.to(q.device)
 
         attn_scores = self.attn_fn(q, k, self.scale, causal_mask, self.gamma) # (B, n_heads, S, S)
         attn_scores = self.attn_dropout(attn_scores)
-
         out = attn_scores @ v # (B, n_heads, S, d_embed)
-        out = out.transpose(1, 2).contiguous().view(B, S, self.d_embed) # (B, S, d_embed)
+        out = out.transpose(1, 2).contiguous().view(B, S, self.n_heads * self.d_embed) # (B, S, self.n_heads * d_embed)
         out = self.W_o(out) # (B, S, d_embed)
         out = self.proj_dropout(out)
 
