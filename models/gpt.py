@@ -36,6 +36,7 @@ class GPT(nn.Module):
         B, S = x.shape
 
         x = self.embedding(x) # (B, S, d_embed)
+        print(x.shape)
         
         for block in self.transformer_blocks:
             x = block(x)
