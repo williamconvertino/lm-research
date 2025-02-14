@@ -68,7 +68,7 @@ class Trainer:
         #     optimizer_adjusted_gb = model_size_gb * 2.0 # Adam uses ~2x model size
         #     return optimizer_adjusted_gb
         # vram_usage = estimate_vram_usage()
-        vram_usage = 15
+        vram_usage = 14
         print(f"Estimated VRAM usage: {vram_usage:.2f}GB")
         for i in range(torch.cuda.device_count()):
             props = torch.cuda.get_device_properties(i)
