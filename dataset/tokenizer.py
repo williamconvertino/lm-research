@@ -40,7 +40,7 @@ class Tokenizer:
         if bos:
             sequence.append(self.special_tokens["<|begin_of_text|>"])
         
-        sequence.extend(self.tokenizer.encode(text, allowed_special=set("<|begin_of_text|>", "<|end_of_text|>", "<|pad|>")))
+        sequence.extend(self.tokenizer.encode(text, allowed_special=set(["<|begin_of_text|>", "<|end_of_text|>", "<|pad|>"])))
 
         if eos:
             sequence.append(self.special_tokens["<|end_of_text|>"])
