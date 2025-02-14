@@ -6,7 +6,7 @@ HUGGINGFACE_PATH = "roneneldan/TinyStories"
 
 class TinyStoriesDataset(DiskDataset):
     
-    def __init__(self, split, tokenizer, context_size, do_shuffle=False):
+    def __init__(self, split, tokenizer, context_size, do_shuffle=False, allow_overlap=True):
     
         file_path = f"{DATASET_DIR}/tinystories/{split}.bin"    
         
@@ -30,11 +30,11 @@ class TinyStoriesDataset(DiskDataset):
             DiskDataset.generate_data_file(test_dataset, f"{DATASET_DIR}/tinystories/test.bin", tokenizer)
             DiskDataset.generate_data_file(val_dataset, f"{DATASET_DIR}/tinystories/val.bin", tokenizer)
     
-        super().__init__(file_path, tokenizer, context_size, do_shuffle)
+        super().__init__(file_path, tokenizer, context_size, do_shuffle, allow_overlap)
 
     def get_splits(tokenizer, max_seq_len):
         return {
-            "train": TinyStoriesDataset("train", tokenizer, max_seq_len, do_shuffle=True),
-            "val": TinyStoriesDataset("val", tokenizer, max_seq_len),
-            "test": TinyStoriesDataset("test", tokenizer, max_seq_len)
+            "train": TinyStoriesDataset("train", tokenizer, max_seq_len, do_shuffle=False, allow_overlap=True),
+            "val": TinyStoriesDataset("val", tokenizer, max_seq_len, do_shuffle=False, allow_overlap=False),
+            "test": TinyStoriesDataset("test", tokenizer, max_seq_len, do_shuffle=False, allow_overlap=False)
         }

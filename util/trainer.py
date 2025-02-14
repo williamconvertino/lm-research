@@ -125,9 +125,6 @@ class Trainer:
             
             for i, batch in enumerate(self.train_loader):
 
-                print(batch[0])
-                exit()
-
                 train_loss = self._step(batch)
         
                 self.optimizer.zero_grad()

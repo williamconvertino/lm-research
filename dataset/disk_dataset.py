@@ -14,7 +14,7 @@ class DiskDataset:
     stride_multiplier = 0.5
     shuffle_buffer_size=1024
 
-    def __init__(self, file_path, tokenizer, max_seq_len, do_shuffle=False, batch_size=64):
+    def __init__(self, file_path, tokenizer, max_seq_len, do_shuffle=False, batch_size=64, allow_overlap=True):
         
         self.file_path = file_path
         self.tokenizer = tokenizer
@@ -22,6 +22,7 @@ class DiskDataset:
         self.stride = int(max_seq_len * self.stride_multiplier)
         self.do_shuffle = do_shuffle
         self.batch_size = batch_size
+        self.allow_overlap = allow_overlap # Whether to allow overlapping sequences (often used in training)
 
         self.data = np.memmap(file_path, dtype="int32", mode="r")
         self.file_size = os.path.getsize(self.file_path) // np.dtype("int32").itemsize
@@ -41,11 +42,12 @@ class DiskDataset:
             eos_id = self.tokenizer.eos_id
             pad_id = self.tokenizer.pad_id
 
-            # Replace all tokens after an EOS with the pad token.
-            indices = np.where(seq == eos_id)[0]
-            if indices.size > 0:
-                first_eos = indices[0]
-                seq[first_eos + 1 :] = pad_id
+            if not self.allow_overlap:
+                # Replace all tokens after an EOS with the pad token.
+                indices = np.where(seq == eos_id)[0]
+                if indices.size > 0:
+                    first_eos = indices[0]
+                    seq[first_eos + 1 :] = pad_id
             return torch.tensor(seq)
 
         # Read chunks from the memmapped data until there isn’t enough left.
