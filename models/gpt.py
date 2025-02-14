@@ -41,10 +41,10 @@ class Attention(nn.Module):
         k = k.transpose(1, 2) # (B, n_heads, S, d_attn)
         v = v.transpose(1, 2) # (B, n_heads, S, d_attn)
 
-        causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().logical_not()
+        causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool()
         causal_mask = causal_mask.to(q.device)
 
-        attn_scores = k @ q.transpose(-2, -1) / math.sqrt(self.d_embed // self.n_heads) # (B, n_heads, S, S)
+        attn_scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_embed // self.n_heads) # (B, n_heads, S, S)
         attn_scores = attn_scores.masked_fill(causal_mask, float("-inf"))
         attn_scores = F.softmax(attn_scores, dim=-1)
         attn_scores = self.attn_dropout(attn_scores)
