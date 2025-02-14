@@ -50,13 +50,14 @@ class August(nn.Module):
             x = x + self.attention_blocks[i](q=x, k=x, v=v)
             
             if i < self.config.n_layers - 1:
-                ff_in = torch.cat([x[:, :, :self.aug_d_embed], torch.zeros_like(x[:, :, self.aug_d_embed:]), x[:, :, 2 * self.aug_d_embed:]], dim=-1)
+                ff_in = torch.cat([x[:, :, :self.aug_d_embed], torch.zeros_like(x[:, :, 2 * self.aug_d_embed:]), x[:, :, 2 * self.aug_d_embed:]], dim=-1)
             else:
                 ff_in = x
 
             x = x + self.feed_forward_blocks[i](ff_in)
 
         x = self.ln_f(x)
+        x = x[:, :, :self.aug_d_embed]
 
         logits = self.lm_head(x)
         if targets is None:
