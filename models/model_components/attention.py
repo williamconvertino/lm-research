@@ -43,7 +43,7 @@ class Attention(nn.Module):
         self.W_v = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
         self.W_o = nn.Linear(self.d_embed * self.n_heads, self.d_embed, bias=False)
 
-        self.rotary_embedding = RotaryPositionalEmbeddings(self.d_attn, self.max_seq_len)
+        self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed, self.max_seq_len)
         
         if attn_fn_type == 'linear':
             self.attn_fn = linear_attention_scores
@@ -66,20 +66,20 @@ class Attention(nn.Module):
         if v is None:
             v = q
         
-        q = self.W_q(q) # (B, S, d_attn * n_heads)
-        k = self.W_k(k) # (B, S, d_attn * n_heads)
-        v = self.W_v(v) # (B, S, d_attn * n_heads)
+        q = self.W_q(q) # (B, S, d_embed * n_heads)
+        k = self.W_k(k) # (B, S, d_embed * n_heads)
+        v = self.W_v(v) # (B, S, d_embed * n_heads)
 
-        q = q.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_attn)
-        k = k.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_attn)
-        v = v.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_attn)
+        q = q.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_embed)
+        k = k.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_embed)
+        v = v.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_embed)
         
         q = self.rotary_embedding(q)
         k = self.rotary_embedding(k)
 
-        q = q.transpose(1, 2) # (B, n_heads, S, d_attn)
-        k = k.transpose(1, 2) # (B, n_heads, S, d_attn)
-        v = v.transpose(1, 2) # (B, n_heads, S, d_attn)
+        q = q.transpose(1, 2) # (B, n_heads, S, d_embed)
+        k = k.transpose(1, 2) # (B, n_heads, S, d_embed)
+        v = v.transpose(1, 2) # (B, n_heads, S, d_embed)
 
         causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().logical_not()
         causal_mask = causal_mask.to(q.device)
@@ -87,7 +87,7 @@ class Attention(nn.Module):
         attn_scores = self.attn_fn(q, k, self.scale, causal_mask, self.gamma) # (B, n_heads, S, S)
         attn_scores = self.attn_dropout(attn_scores)
 
-        out = attn_scores @ v # (B, n_heads, S, d_attn)
+        out = attn_scores @ v # (B, n_heads, S, d_embed)
         out = out.transpose(1, 2).contiguous().view(B, S, self.d_embed) # (B, S, d_embed)
         out = self.W_o(out) # (B, S, d_embed)
         out = self.proj_dropout(out)
