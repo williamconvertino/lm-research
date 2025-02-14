@@ -45,7 +45,6 @@ class August(nn.Module):
         
             
         for i in range(self.config.n_layers):
-            print(i)
             v = torch.cat([x[:, :, self.aug_d_embed:2 * self.aug_d_embed], torch.zeros_like(x[:, :, :2 * self.aug_d_embed])], dim=-1)
             x = x + self.attention_blocks[i](q=x, k=x, v=v)
             
