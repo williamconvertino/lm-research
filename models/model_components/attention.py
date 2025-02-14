@@ -41,7 +41,7 @@ class Attention(nn.Module):
         self.W_q = nn.Linear(self.d_embed, self.d_embed, bias=False)
         self.W_k = nn.Linear(self.d_embed, self.d_embed, bias=False)
         self.W_v = nn.Linear(self.d_embed, self.d_embed, bias=False)
-        self.W_o = nn.Linear(self.d_embed, self.d_embed, bias=False)
+        self.W_o = nn.Linear(self.n_heads * self.d_embed, self.d_embed, bias=False)
 
         self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed, self.max_seq_len)
         
@@ -87,7 +87,7 @@ class Attention(nn.Module):
         attn_scores = self.attn_fn(q, k, self.scale, causal_mask, self.gamma) # (B, n_heads, S, S)
         attn_scores = self.attn_dropout(attn_scores)
         out = attn_scores @ v # (B, n_heads, S, d_embed)
-        out = out.transpose(1, 2).contiguous().view(B, S, self.d_embed) # (B, S, self.n_heads * d_embed)
+        out = out.transpose(1, 2).contiguous().view(B, S, self.n_heads * self.d_embed) # (B, S, self.n_heads * d_embed)
         out = self.W_o(out) # (B, S, d_embed)
         out = self.proj_dropout(out)
 
