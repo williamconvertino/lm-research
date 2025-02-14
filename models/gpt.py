@@ -2,13 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .model_components.transformer_block import TransformerBlock
+from .model_components.embedding import TopicalEmbedding
 
 class GPT(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
 
-        self.token_embedding = nn.Embedding(config.tokenizer.vocab_size, config.d_embed)
+        self.token_embedding = TopicalEmbedding(config)
         
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
 

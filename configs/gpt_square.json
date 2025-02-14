@@ -5,5 +5,6 @@
     "n_layers": 1,
     "n_heads": 8,
     "dropout": 0.1,
-    "use_square_attention_heads": true
+    "use_square_attention_heads": true,
+    "center_embeddings": true
 }
