@@ -29,23 +29,23 @@ def load_most_recent_checkpoint(model):
 
 def load_model(config):
     def get_model_class():
-        model_file = importlib.import_module(f"models.{config.model.type.lower().replace(' ', '_')}")
+        model_file = importlib.import_module(f"models.{config.type.lower().replace(' ', '_')}")
         for attr in dir(model_file):
-            if attr.lower() == config.model.type.lower():
+            if attr.lower() == config.type.lower():
                 return getattr(model_file, attr)
-        raise ValueError(f"Model class not found: {config.model.type}")
-    model = get_model_class()(config.model)
-    model.name = config.model.name
+        raise ValueError(f"Model class not found: {config.type}")
+    model = get_model_class()(config)
+    model.name = config.name
     return model
 
 def train(config):
-    print(f"Training model [{config.model.name}]")
+    print(f"Training model [{config.name}]")
     model = load_model(config)
     checkpoint = load_most_recent_checkpoint(model)
     if checkpoint is not None:
         model.load_state_dict(checkpoint["model_state_dict"])
     tokenizer = Tokenizer()
-    splits = TinyStoriesDataset.get_splits(tokenizer, config.model.max_seq_len, config.training.batch_size)
+    splits = TinyStoriesDataset.get_splits(tokenizer, config.max_seq_len)
     trainer = Trainer(model, splits, checkpoint)
     trainer.train()
 
@@ -54,10 +54,10 @@ def eval(config, eval_flags):
     model = load_model(config)
     checkpoint = load_most_recent_checkpoint(model)
     if checkpoint is None:
-        raise FileNotFoundError(f"No checkpoint found for model [{config.model.name}], cannot evaluate")
+        raise FileNotFoundError(f"No checkpoint found for model [{config.name}], cannot evaluate")
     model.load_state_dict(checkpoint["model_state_dict"])
     tokenizer = Tokenizer()
-    splits = TinyStoriesDataset.get_splits(tokenizer, config.model.max_seq_len, config.training.batch_size)
+    splits = TinyStoriesDataset.get_splits(tokenizer, config.max_seq_len)
     evaluator = Evaluator(model, splits, tokenizer)
     if "beam" in eval_flags:
         evaluator.eval_beam()
