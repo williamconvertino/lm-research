@@ -124,6 +124,10 @@ class Trainer:
         for epoch in range(self.checkpoint["epoch"], self.max_epochs):
             
             for i, batch in enumerate(self.train_loader):
+
+                print(batch[0])
+                exit()
+
                 train_loss = self._step(batch)
         
                 self.optimizer.zero_grad()
