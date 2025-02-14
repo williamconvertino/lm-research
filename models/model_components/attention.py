@@ -53,7 +53,7 @@ class Attention(nn.Module):
             self.attn_fn = softmax_attention_scores
 
         self.gamma = nn.Parameter(torch.ones(self.n_heads)) if attn_fn_type == 'rbf' else None
-        self.scale = 1.0 / math.sqrt(self.d_attn)
+        self.scale = 1.0 / math.sqrt(self.embed)
 
         self.attn_dropout = nn.Dropout(0.1)
         self.proj_dropout = nn.Dropout(0.1)
