@@ -24,7 +24,7 @@ class SeptemberBlock(nn.Module):
         q = self.attn_norm_2(q)
         v = self.attn_norm_2(v)
         attn_out = self.attention(q, k, v)
-        x = x + torch.cat([torch.zeros(B, 1, self.config.d_embed), attn_out], dim=1)
+        x = x + torch.cat([torch.zeros(B, 1, self.config.d_embed, device=x.device), attn_out], dim=1)
         x = x + self.feed_forward(self.ff_norm(x))
         return x
 
