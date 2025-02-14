@@ -20,7 +20,7 @@ class GPT2(nn.Module):
         self.model = GPT2LMHeadModel(config)
 
     def forward(self, x, targets=None):
-        outputs = self.model(x, targets=targets)
+        outputs = self.model(x)
         logits = outputs.logits
         loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=-1)
         return logits, loss
