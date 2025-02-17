@@ -13,7 +13,7 @@ class Trainer:
     grad_clip = 1.0
     max_epochs = 20
     patience = 5
-    val_interval_multiplier = 0.1
+    val_interval_multiplier = 0.01
 
     def __init__(self, model, splits, checkpoint=None):
         self.model = model
