@@ -14,6 +14,5 @@ class ZeroMeanEmbedding(nn.Module):
             self.embedding.weight -= self.embedding.weight.mean(dim=0, keepdim=True)
 
     def forward(self, x):
-        if self.training: # Only need to update during training
-            self.enforce_zero_mean()
+        self.enforce_zero_mean()
         return self.embedding(x)
