@@ -106,14 +106,16 @@ class October(BaseModel):
     def __init__(self, config):
         super().__init__()
         self.config = config
+        self.d_embed = config.d_embed
+        self.d_aug = self.d_embed // 3
 
-        self.embedding = ZeroMeanEmbedding(config.vocab_size, config.d_embed // 3)
+        self.embedding = ZeroMeanEmbedding(config.vocab_size, self.d_aug)
         
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config.d_embed, config.n_heads) for _ in range(config.n_layers)])
 
-        self.ln_f = nn.LayerNorm(config.d_embed // 3)
+        self.ln_f = nn.LayerNorm(self.d_aug)
 
-        self.lm_head = nn.Linear(config.d_embed // 3, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(self.d_aug, config.vocab_size, bias=False)
         self.embedding.tie_weights(self.lm_head)
         
         self.init_weights()
@@ -129,7 +131,7 @@ class October(BaseModel):
         for i, block in enumerate(self.transformer_blocks):
             x = block(x, final=(i == len(self.transformer_blocks) - 1))
 
-        x = x[:, :, :self.d_embed // 3]
+        x = x[:, :, :self.d_aug]
         x = self.ln_f(x)
 
         logits = self.lm_head(x)
