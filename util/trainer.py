@@ -136,9 +136,9 @@ class Trainer:
                     self.checkpoint["history"]["val_perplexity"].append((step, val_perplexity))
             
                 time_remaining = self._get_time_remaining(i, start_time)
-                print(f"\r[Epoch {epoch} | Step {i}/{len(self.train_loader)}] train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val perplexity: {val_perplexity:.4f} | time remaining: {time_remaining}        ", end="")
+                print(f"\r[Epoch {epoch} | Step {i}/{len(self.train_loader)}] train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val ppl: {val_perplexity:.4f} | time remaining: {time_remaining}", end="")
             
-            print(f"Epoch {epoch} | train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val perplexity: {val_perplexity:.4f} | best val loss: {best_val_loss:.4f} | early stopping counter: {self.early_stopping_counter}/{self.patience}        ")
+            print(f"Epoch {epoch} | train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val ppl: {val_perplexity:.4f} | best val loss: {best_val_loss:.4f}")
 
             self.checkpoint["epoch"] = epoch
             self.checkpoint["model_state_dict"] = self.model.state_dict()
