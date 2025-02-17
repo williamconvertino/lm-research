@@ -121,9 +121,9 @@ class October(BaseModel):
     def forward(self, x, targets=None):
         B, S = x.shape
 
-        f = torch.zeros_like(e, device=e.device)
         e = g = self.embedding(x) # (B, S, d_embed // 3)
-        
+        f = torch.zeros_like(e, device=e.device)
+
         x = torch.cat([f, g, e], dim=-1)
 
         for i, block in enumerate(self.transformer_blocks):
