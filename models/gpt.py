@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchtune.modules import RotaryPositionalEmbeddings
 from models.model_util.base_model import BaseModel
-from models.model_util.zero_mean_embedding import ZeroMeanEmbedding
 
 class Attention(nn.Module):
     def __init__(self, d_embed, n_heads):
@@ -13,12 +12,12 @@ class Attention(nn.Module):
         self.d_embed = d_embed
         self.n_heads = n_heads
         
-        self.W_q = nn.Linear(self.d_embed, self.d_embed, bias=False)
-        self.W_k = nn.Linear(self.d_embed, self.d_embed, bias=False)
-        self.W_v = nn.Linear(self.d_embed, self.d_embed, bias=False)
-        self.out_proj = nn.Linear(self.d_embed, self.d_embed, bias=False)
+        self.W_q = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
+        self.W_k = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
+        self.W_v = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
+        self.out_proj = nn.Linear(self.d_embed * self.n_heads, self.d_embed, bias=False)
 
-        self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed // self.n_heads)
+        self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed)
 
         self.attn_dropout = nn.Dropout(0.1)
         self.out_dropout = nn.Dropout(0.1)
@@ -30,9 +29,9 @@ class Attention(nn.Module):
         k = self.W_k(k) # (B, S, d_attn * n_heads)
         v = self.W_v(v) # (B, S, d_attn * n_heads)
 
-        q = q.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
-        k = k.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
-        v = v.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
+        q = q.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_attn)
+        k = k.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_attn)
+        v = v.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_attn)
         
         q = self.rotary_embedding(q)
         k = self.rotary_embedding(k)
@@ -59,6 +58,7 @@ class Attention(nn.Module):
 class FeedForward(nn.Module):
     def __init__(self, d_embed):
         super().__init__()
+
         self.d_embed = d_embed
 
         self.fc1 = nn.Linear(self.d_embed, 4 * self.d_embed)
@@ -77,12 +77,11 @@ class TransformerBlock(nn.Module):
     def __init__(self, d_embed, n_heads):
         super().__init__()
 
-        self.attention = Attention(d_embed, n_heads)
-        self.feed_forward = FeedForward(d_embed)
-
         self.ln_1 = nn.LayerNorm(d_embed)
         self.ln_2 = nn.LayerNorm(d_embed)
         
+        self.attention = Attention(d_embed, n_heads)
+        self.feed_forward = FeedForward(d_embed)
         
     def forward(self, x):
         x = self.ln_1(x)
@@ -94,18 +93,23 @@ class TransformerBlock(nn.Module):
 class GPT(BaseModel):
     def __init__(self, config):
         super().__init__()
+        
         self.config = config
 
-        self.embedding = ZeroMeanEmbedding(config.vocab_size, config.d_embed)
+        self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
         
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config.d_embed, config.n_heads) for _ in range(config.n_layers)])
 
         self.ln_f = nn.LayerNorm(config.d_embed)
 
         self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
-        self.embedding.tie_weights(self.lm_head)
+        self.lm_head.weight = self.embedding.weight
         
         self.init_weights()
+
+    def post_update(self):
+        with torch.no_grad():
+            self.embedding.weight -= self.embedding.weight.mean(dim=0, keepdim=True)
         
     def forward(self, x, targets=None):
         B, S = x.shape
