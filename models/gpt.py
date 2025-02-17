@@ -12,12 +12,12 @@ class Attention(nn.Module):
         self.d_embed = d_embed
         self.n_heads = n_heads
         
-        self.W_q = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
-        self.W_k = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
-        self.W_v = nn.Linear(self.d_embed, self.d_embed * self.n_heads, bias=False)
-        self.out_proj = nn.Linear(self.d_embed * self.n_heads, self.d_embed, bias=False)
+        self.W_q = nn.Linear(self.d_embed, self.d_embed, bias=False)
+        self.W_k = nn.Linear(self.d_embed, self.d_embed, bias=False)
+        self.W_v = nn.Linear(self.d_embed, self.d_embed, bias=False)
+        self.out_proj = nn.Linear(self.d_embed, self.d_embed, bias=False)
 
-        self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed)
+        self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed // self.n_heads)
 
         self.attn_dropout = nn.Dropout(0.1)
         self.out_dropout = nn.Dropout(0.1)
@@ -29,9 +29,9 @@ class Attention(nn.Module):
         k = self.W_k(k) # (B, S, d_attn * n_heads)
         v = self.W_v(v) # (B, S, d_attn * n_heads)
 
-        q = q.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_attn)
-        k = k.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_attn)
-        v = v.view(B, S, self.n_heads, self.d_embed) # (B, S, n_heads, d_attn)
+        q = q.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
+        k = k.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
+        v = v.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
         
         q = self.rotary_embedding(q)
         k = self.rotary_embedding(k)
