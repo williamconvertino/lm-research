@@ -33,8 +33,8 @@ class Attention(nn.Module):
         k = k.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
         v = v.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
         
-        q = self.rotary_embedding(q)
-        k = self.rotary_embedding(k)
+        # q = self.rotary_embedding(q)
+        # k = self.rotary_embedding(k)
 
         q = q.transpose(1, 2) # (B, n_heads, S, d_attn)
         k = k.transpose(1, 2) # (B, n_heads, S, d_attn)
@@ -97,6 +97,7 @@ class August(BaseModel):
         self.config = config
 
         self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
+        self.positional_embedding = nn.Embedding(config.max_seq_len, config.d_embed)
         
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config.d_embed, config.n_heads) for _ in range(config.n_layers)])
 
@@ -106,15 +107,12 @@ class August(BaseModel):
         self.lm_head.weight = self.embedding.weight
         
         self.init_weights()
-
-    def post_update(self):
-        with torch.no_grad():
-            self.embedding.weight -= self.embedding.weight.mean(dim=0, keepdim=True)
         
     def forward(self, x, targets=None):
         B, S = x.shape
 
         x = self.embedding(x) # (B, S, d_embed)
+        x = x + self.positional_embedding(torch.arange(S, device=x.device)) # (B, S, d_embed)
 
         for block in self.transformer_blocks:
             x = block(x)

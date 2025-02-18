@@ -106,10 +106,6 @@ class LM(BaseModel):
         self.lm_head.weight = self.embedding.weight
         
         self.init_weights()
-
-    def post_update(self):
-        with torch.no_grad():
-            self.embedding.weight -= self.embedding.weight.mean(dim=0, keepdim=True)
         
     def forward(self, x, targets=None):
         B, S = x.shape
