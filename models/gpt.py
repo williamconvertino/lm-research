@@ -25,9 +25,9 @@ class Attention(nn.Module):
     def forward(self, q, k, v):
         B, S, _ = q.shape
         
-        q = self.W_q(q) # (B, S, d_attn * n_heads)
-        k = self.W_k(k) # (B, S, d_attn * n_heads)
-        v = self.W_v(v) # (B, S, d_attn * n_heads)
+        q = self.W_q(q) # (B, S, d_embed)
+        k = self.W_k(k) # (B, S, d_embed)
+        v = self.W_v(v) # (B, S, d_embed)
 
         q = q.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
         k = k.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
@@ -40,11 +40,11 @@ class Attention(nn.Module):
         k = k.transpose(1, 2) # (B, n_heads, S, d_attn)
         v = v.transpose(1, 2) # (B, n_heads, S, d_attn)
 
-        causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().logical_not()
+        causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool()
         causal_mask = causal_mask.to(q.device)
 
         attn_scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_embed) # (B, n_heads, S, S)
-        attn_scores = attn_scores.masked_fill(causal_mask == 0, float("-inf"))
+        attn_scores = attn_scores.masked_fill(causal_mask, float("-inf"))
         attn_scores = F.softmax(attn_scores, dim=-1)
         attn_scores = self.attn_dropout(attn_scores)
 
