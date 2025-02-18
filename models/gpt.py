@@ -90,7 +90,7 @@ class TransformerBlock(nn.Module):
         x = x + self.feed_forward(x)
         return x
 
-class GPT(BaseModel):
+class LLM(BaseModel):
     def __init__(self, config):
         super().__init__()
         
