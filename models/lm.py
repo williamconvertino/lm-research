@@ -43,7 +43,7 @@ class Attention(nn.Module):
         causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool()
         causal_mask = causal_mask.to(q.device)
 
-        attn_scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_embed) # (B, n_heads, S, S)
+        attn_scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_embed // self.n_heads) # (B, n_heads, S, S)
         attn_scores = attn_scores.masked_fill(causal_mask, float("-inf"))
         attn_scores = F.softmax(attn_scores, dim=-1)
         attn_scores = self.attn_dropout(attn_scores)
@@ -90,7 +90,7 @@ class TransformerBlock(nn.Module):
         x = x + self.feed_forward(x)
         return x
 
-class LLM(BaseModel):
+class LM(BaseModel):
     def __init__(self, config):
         super().__init__()
         
