@@ -12,10 +12,10 @@ class Attention(nn.Module):
         self.d_embed = d_embed
         self.n_heads = n_heads
         
-        self.W_q = nn.Linear(self.d_embed, self.d_embed, bias=False)
-        self.W_k = nn.Linear(self.d_embed, self.d_embed, bias=False)
-        self.W_v = nn.Linear(self.d_embed, self.d_embed, bias=False)
-        self.out_proj = nn.Linear(self.d_embed, self.d_embed, bias=False)
+        self.W_q = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed))
+        self.W_k = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed))
+        self.W_v = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed))
+        self.W_o = nn.Linear(n_heads * d_embed, d_embed, bias=False)
 
         self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed // self.n_heads)
 
@@ -25,35 +25,30 @@ class Attention(nn.Module):
     def forward(self, q, k, v):
         B, S, _ = q.shape
         
-        q = self.W_q(q) # (B, S, d_embed)
-        k = self.W_k(k) # (B, S, d_embed)
-        v = self.W_v(v) # (B, S, d_embed)
-
-        q = q.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
-        k = k.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
-        v = v.view(B, S, self.n_heads, self.d_embed // self.n_heads) # (B, S, n_heads, d_attn)
+        q = q.repeat(1, 1, self.n_heads).view(B, S, self.n_heads, self.d_embed).transpose(1, 2)
+        k = k.repeat(1, 1, self.n_heads).view(B, S, self.n_heads, self.d_embed).transpose(1, 2)
+        v = v.repeat(1, 1, self.n_heads).view(B, S, self.n_heads, self.d_embed).transpose(1, 2)
         
-        q = self.rotary_embedding(q)
-        k = self.rotary_embedding(k)
+        Q = q @ self.W_q
+        K = k @ self.W_k
+        V = v @ self.W_v
+        
+        causal_mask = torch.tril(torch.ones(S, S, device=q.device), diagonal=0).view(1, S, S).bool().logical_not()
 
-        q = q.transpose(1, 2) # (B, n_heads, S, d_attn)
-        k = k.transpose(1, 2) # (B, n_heads, S, d_attn)
-        v = v.transpose(1, 2) # (B, n_heads, S, d_attn)
-
-        causal_mask = torch.tril(torch.ones(S, S), diagonal=0).view(1, 1, S, S).bool().logical_not()
-        causal_mask = causal_mask.to(q.device)
-
-        attn_scores = torch.matmul(q, k.transpose(-1, -2)) / math.sqrt(self.d_embed // self.n_heads) # (B, n_heads, S, S)
-        attn_scores = attn_scores.masked_fill(causal_mask, float("-inf"))
+        attn_scores = torch.matmul(Q, K.transpose(-1, -2))
+        attn_scores = attn_scores / math.sqrt(self.d_embed)
+        attn_scores = attn_scores.masked_fill(causal_mask, float('-inf'))
         attn_scores = F.softmax(attn_scores, dim=-1)
         attn_scores = self.attn_dropout(attn_scores)
+        
+        attn_output = attn_scores @ V
 
-        attn = attn_scores @ v # (B, n_heads, S, d_attn)
-        attn = attn.transpose(1, 2).contiguous().view(B, S, self.d_embed) # (B, S, d_embed)
-        out = self.out_proj(attn) # (B, S, d_embed)
-        out = self.out_dropout(out)
-
-        return out
+        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.n_heads * self.d_embed)
+        
+        attn_output = self.W_o(attn_output)
+        attn_output = self.out_dropout(attn_output)
+        
+        return attn_output
 
 class FeedForward(nn.Module):
     def __init__(self, d_embed):
@@ -96,13 +91,13 @@ class LM(BaseModel):
         
         self.config = config
 
-        self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
+        self.embedding = nn.Embedding(config.vocab_size, d_embed)
         
-        self.transformer_blocks = nn.ModuleList([TransformerBlock(config.d_embed, config.n_heads) for _ in range(config.n_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(d_embed, n_headss) for _ in range(config.n_layers)])
 
-        self.ln_f = nn.LayerNorm(config.d_embed)
+        self.ln_f = nn.LayerNorm(d_embed)
 
-        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(d_embed, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
         self.init_weights()
