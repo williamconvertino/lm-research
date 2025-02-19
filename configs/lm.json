@@ -1,8 +1,8 @@
 {
     "type": "lm",
     "max_seq_len": 256,
-    "d_embed": 570,
+    "d_embed": 480,
     "n_layers": 2,
-    "n_heads": 8,
+    "n_heads": 4,
     "dropout": 0.1
 }
