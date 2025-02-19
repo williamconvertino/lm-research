@@ -89,6 +89,7 @@ class LM(BaseModel):
     def __init__(self, config):
         super().__init__()
         
+        self.config = config
         d_embed = config.d_embed
         n_heads = config.n_heads
 
