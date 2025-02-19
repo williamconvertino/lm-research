@@ -89,11 +89,12 @@ class LM(BaseModel):
     def __init__(self, config):
         super().__init__()
         
-        self.config = config
+        d_embed = config.d_embed
+        n_heads = config.n_heads
 
         self.embedding = nn.Embedding(config.vocab_size, d_embed)
         
-        self.transformer_blocks = nn.ModuleList([TransformerBlock(d_embed, n_headss) for _ in range(config.n_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(d_embed, n_heads) for _ in range(config.n_layers)])
 
         self.ln_f = nn.LayerNorm(d_embed)
 
