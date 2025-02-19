@@ -15,7 +15,7 @@ class Attention(nn.Module):
         self.W_q = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed // n_heads))
         self.W_k = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed // n_heads))
         self.W_v = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed // n_heads))
-        self.W_o = nn.Linear(n_heads * d_embed // n_heads, d_embed, bias=False)
+        self.W_o = nn.Linear(d_embed, d_embed, bias=False)
 
         self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed // self.n_heads)
 
@@ -43,7 +43,7 @@ class Attention(nn.Module):
         
         attn_output = attn_scores @ V
 
-        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.n_heads * self.d_embed)
+        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.d_embed)
         
         attn_output = self.W_o(attn_output)
         attn_output = self.out_dropout(attn_output)
