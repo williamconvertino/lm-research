@@ -12,10 +12,10 @@ class Attention(nn.Module):
         self.d_embed = d_embed
         self.n_heads = n_heads
         
-        self.W_q = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed))
-        self.W_k = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed))
-        self.W_v = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed))
-        self.W_o = nn.Linear(n_heads * d_embed, d_embed, bias=False)
+        self.W_q = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed // n_heads))
+        self.W_k = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed // n_heads))
+        self.W_v = nn.Parameter(torch.zeros(n_heads, d_embed, d_embed // n_heads))
+        self.W_o = nn.Linear(n_heads * d_embed // n_heads, d_embed, bias=False)
 
         self.rotary_embedding = RotaryPositionalEmbeddings(self.d_embed // self.n_heads)
 
