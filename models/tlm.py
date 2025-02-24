@@ -3,7 +3,6 @@ import math
 import torch.nn as nn
 import torch.nn.functional as F
 from torchtune.modules import RotaryPositionalEmbeddings
-from model_util import init_weights
 
 class Attention(nn.Module):
     def __init__(self, config):
