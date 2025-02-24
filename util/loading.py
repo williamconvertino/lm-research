@@ -3,6 +3,7 @@ import torch
 import importlib
 from types import SimpleNamespace
 import json
+import sys
 
 CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), "../checkpoints")
 MODELS_DIR = os.path.join(os.path.dirname(__file__), "../models")
@@ -15,6 +16,8 @@ def load_most_recent_checkpoint(model):
     return torch.load(checkpoint_path)
 
 def load_model(config):
+    
+    sys.path.append(MODELS_DIR)
     
     model_name = config.model
     model_dir = os.path.join(MODELS_DIR, f"{model_name}.py")
