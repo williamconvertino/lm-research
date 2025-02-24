@@ -1,0 +1,8 @@
+{
+    "model": "tlm",
+    "max_seq_len": 256,
+    "d_embed": 660,
+    "n_layers": 3,
+    "n_heads": 8,
+    "dropout": 0.1
+}
