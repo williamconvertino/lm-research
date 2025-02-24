@@ -9,12 +9,10 @@ from util.loading import load_most_recent_checkpoint, load_config
 import os
 import importlib
 
-MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
-
 def load_model(config):
     
     model_name = config.model
-    model_dir = os.path.join(MODELS_DIR, f"{model_name}.py")
+    model_dir = f"models/{model_name}.py"
     model_cls = None
     
     try:
