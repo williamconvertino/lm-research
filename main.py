@@ -31,7 +31,7 @@ def main():
     checkpoint = load_most_recent_checkpoint(model)
     
     if args.train:
-        trainer = Trainer(model, splits, checkpoint)
+        trainer = Trainer(model, splits, tokenizer, checkpoint)
         trainer.train()
     elif args.eval:
         assert checkpoint is not None, "No checkpoint found for model, cannot evaluate"
