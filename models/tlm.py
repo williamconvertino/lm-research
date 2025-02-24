@@ -35,9 +35,9 @@ class Attention(nn.Module):
         k = self.W_k(k)
         v = self.W_v(v)
         
-        q = q.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_embed // n_heads)
-        k = k.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_embed // n_heads)
-        v = v.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_embed // n_heads)
+        q = q.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
+        k = k.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
+        v = v.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
         
         q = self.rotary_embeddings(q)
         k = self.rotary_embeddings(k)
