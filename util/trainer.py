@@ -65,16 +65,19 @@ class Trainer:
         vram_usage = 14
         print(f"Estimated VRAM usage: {vram_usage:.2f}GB")
         for i in range(torch.cuda.device_count()):
-            props = torch.cuda.get_device_properties(i)
-            gpu = torch.device(f'cuda:{i}')
-            free_memory, total_memory = torch.cuda.mem_get_info(gpu)
-            total_memory = int(total_memory / 1024**3)
-            free_memory = int(free_memory / 1024**3)  
-            if free_memory > vram_usage:
-                print(f"Using GPU [{i}]: {props.name} with {free_memory:.2f}GB")
-                return torch.device(f'cuda:{i}')
-            else:
-                print(f"GPU [{i}]: {props.name} only has {free_memory:.2f}GB free memory, skipping")
+            try:
+                props = torch.cuda.get_device_properties(i)
+                gpu = torch.device(f'cuda:{i}')
+                free_memory, total_memory = torch.cuda.mem_get_info(gpu)
+                total_memory = int(total_memory / 1024**3)
+                free_memory = int(free_memory / 1024**3)  
+                if free_memory > vram_usage:
+                    print(f"Using GPU [{i}]: {props.name} with {free_memory:.2f}GB")
+                    return torch.device(f'cuda:{i}')
+                else:
+                    print(f"GPU [{i}]: {props.name} only has {free_memory:.2f}GB free memory, skipping")
+            except Exception:
+                print(f"Error reading GPU [{i}], skipping")
         raise RuntimeError("No GPU with at least 10GB of free memory found")
     
     def _save_checkpoint(self):
