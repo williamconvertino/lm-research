@@ -28,6 +28,7 @@ def load_model(config):
         raise ValueError(f"Module not found: {module_name}")
     
     for attr in dir(model_file): # Find class in module
+        print(attr)
         if attr.lower() == model_name.lower().replace("_", ""):
             model_cls = getattr(model_file, attr)
         break
