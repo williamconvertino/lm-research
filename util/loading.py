@@ -9,7 +9,7 @@ MODELS_DIR = os.path.join(os.path.dirname(__file__), "../models")
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../configs")
 
 def load_most_recent_checkpoint(model):
-    checkpoint_path = os.path.join(CHECKPOINT_DIR, model.name, ".pth")
+    checkpoint_path = os.path.join(CHECKPOINT_DIR, f"{model.config.name}.pt")
     if not os.path.exists(checkpoint_path):
         return None
     return torch.load(checkpoint_path)
@@ -17,7 +17,7 @@ def load_most_recent_checkpoint(model):
 def load_model(config):
     
     model_name = config.model
-    model_dir = os.path.join(MODELS_DIR, model_name, ".py")
+    model_dir = os.path.join(MODELS_DIR, f"{model_name}.py")
     model_cls = None
     
     try:
