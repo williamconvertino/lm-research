@@ -17,7 +17,7 @@ class Attention(nn.Module):
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
-        self.rotary_embeddings = RotaryPositionalEmbeddings(config.d_embed)
+        self.rotary_embeddings = RotaryPositionalEmbeddings(config.d_embed // config.n_heads)
         
         self.drop_attn = nn.Dropout(0.1)
         self.drop_resid = nn.Dropout(0.1)
