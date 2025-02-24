@@ -9,7 +9,7 @@ from util.loading import load_most_recent_checkpoint, load_config
 import os
 import importlib
 
-MODELS_DIR = os.path.join(os.path.dirname(__file__), "../models")
+MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
 
 def load_model(config):
     
