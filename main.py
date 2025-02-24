@@ -5,6 +5,7 @@ from util.trainer import Trainer
 from util.evaluator import Evaluator
 from dataset.tokenizer import Tokenizer
 from dataset.tinystories_dataset import TinyStoriesDataset
+from dataset.bookcorpus import BookCorpusDataset
 from util.loading import load_model, load_most_recent_checkpoint, load_config
 
 def main():
@@ -24,6 +25,8 @@ def main():
     
     if args.dataset == "tiny_stories":
         splits = TinyStoriesDataset.get_splits(tokenizer, config.max_seq_len)
+    elif args.dataset == "bookcorpus":
+        splits = BookCorpusDataset.get_splits(tokenizer, config.max_seq_len)
     else:
         raise ValueError(f"Dataset not found: {args.dataset}")
     
