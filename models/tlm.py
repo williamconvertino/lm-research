@@ -100,7 +100,7 @@ class TLM(nn.Module):
         self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
-        self.apply(self._init_weights)
+        self.apply(TLM._init_weights)
         
     def _init_weights(module):
         if isinstance(module, nn.LayerNorm):
