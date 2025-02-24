@@ -22,7 +22,7 @@ def load_model(config):
     model_name = config.model
     model_dir = os.path.join(MODELS_DIR, f"{model_name}.py")
     model_cls = None
-    
+    print(model_dir)
     try:
         model_file = importlib.import_module(model_dir)
     except ModuleNotFoundError:
