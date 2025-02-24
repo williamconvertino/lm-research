@@ -17,7 +17,7 @@ def load_most_recent_checkpoint(model):
 
 def load_model(config):
     
-    sys.path.append(MODELS_DIR)
+    # sys.path.append(MODELS_DIR)
     model_name = config.model
     module_name = f"models.{model_name}"
     model_cls = None
