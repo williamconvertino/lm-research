@@ -18,8 +18,8 @@ class GPT2(nn.Module):
         )
         self.model = GPT2LMHeadModel(config)
 
-    def forward(self, x, targets=None):
+    def forward(self, x, targets=None, ignore_index=-1):
         outputs = self.model(x)
         logits = outputs.logits
-        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=self.tokenizer.pad_id)
+        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.contiguous().view(-1), ignore_index=ignore_index)
         return logits, loss
