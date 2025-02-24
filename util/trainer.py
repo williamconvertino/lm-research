@@ -15,10 +15,11 @@ class Trainer:
     patience = 5
     val_interval_multiplier = 0.01
 
-    def __init__(self, model, splits, checkpoint=None):
+    def __init__(self, model, splits, tokenizer, checkpoint=None):
         self.model = model
         self.train_loader = splits["train"]
         self.val_loader = splits["val"]
+        self.tokenizer = tokenizer
         self.device = self._get_device()
 
         self.num_training_steps = len(self.train_loader)
@@ -93,7 +94,7 @@ class Trainer:
         input_ids = batch.to(self.device)
         x = input_ids[:, :-1]
         targets = input_ids[:, 1:]
-        _, loss = self.model(x, targets=targets)
+        _, loss = self.model(x, targets=targets, ignore_index=self.tokenizer.pad_token_id)
         return loss
 
     def _validate(self):
