@@ -31,12 +31,20 @@ class Attention(nn.Module):
         if v is None:
             v = q
             
-        q = self.W_q(q)
+        q = self.W_q(q) # (B, S, d_embed)
         k = self.W_k(k)
         v = self.W_v(v)
         
+        q = q.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_embed // n_heads)
+        k = k.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_embed // n_heads)
+        v = v.view(B, S, self.n_heads, self.d_attn) # (B, S, n_heads, d_embed // n_heads)
+        
         q = self.rotary_embeddings(q)
         k = self.rotary_embeddings(k)
+        
+        q = q.transpose(1, 2) # (B, n_heads, S, d_embed // n_heads)
+        k = k.transpose(1, 2) # (B, n_heads, S, d_embed // n_heads)
+        v = v.transpose(1, 2) # (B, n_heads, S, d_embed // n_heads)
         
         causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().to(q.device)
         
