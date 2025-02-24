@@ -39,15 +39,15 @@ class DiskDataset:
         def pop_buffer():
             pop_index = random.randint(0, len(buffer) - 1) if self.do_shuffle else 0 # Randomly select index if shuffling is enabled
             seq = buffer.pop(pop_index).copy()
-            eos_id = self.tokenizer.eos_id
-            pad_id = self.tokenizer.pad_id
+            eos_token_id = self.tokenizer.eos_token_id
+            pad_token_id = self.tokenizer.pad_token_id
 
             if not self.allow_overlap:
                 # Replace all tokens after an EOS with the pad token.
-                indices = np.where(seq == eos_id)[0]
+                indices = np.where(seq == eos_token_id)[0]
                 if indices.size > 0:
                     first_eos = indices[0]
-                    seq[first_eos + 1 :] = pad_id
+                    seq[first_eos + 1 :] = pad_token_id
             return torch.tensor(seq)
 
         # Read chunks from the memmapped data until there isn’t enough left.

@@ -18,9 +18,9 @@ class Tokenizer:
             token: i + num_base_tokens for i, token in enumerate(special_tokens)
         }
 
-        self.eos_id = self.special_tokens["<|end_of_text|>"]
-        self.bos_id = self.special_tokens["<|begin_of_text|>"]
-        self.pad_id = self.special_tokens["<|pad|>"]
+        self.eos_token_id = self.special_tokens["<|end_of_text|>"]
+        self.bos_token_id = self.special_tokens["<|begin_of_text|>"]
+        self.pad_token_id = self.special_tokens["<|pad|>"]
 
         self.tokenizer = tiktoken.Encoding(
             name="tokenizer",
