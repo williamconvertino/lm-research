@@ -17,12 +17,10 @@ def load_most_recent_checkpoint(model):
 
 def load_model(config):
     
-    sys.path.append(MODELS_DIR)
-    
     model_name = config.model
     model_dir = os.path.join(MODELS_DIR, f"{model_name}.py")
     model_cls = None
-    print(model_dir)
+    sys.path.append(model_dir)
     try:
         model_file = importlib.import_module(model_dir)
     except ModuleNotFoundError:
