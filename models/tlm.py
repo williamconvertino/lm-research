@@ -86,7 +86,7 @@ class TransformerBlock(nn.Module):
         x = x + self.feed_forward(x)
         return x
 
-class TLM(BaseModel):
+class TLM(nn.Module):
     def __init__(self, config):
         super().__init__()
         
@@ -101,7 +101,19 @@ class TLM(BaseModel):
         self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
-        self.apply(init_weights)
+        self.apply(self._init_weights)
+        
+    def _init_weights(module):
+        if isinstance(module, nn.LayerNorm):
+            nn.init.ones_(module.weight)
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Linear):
+            nn.init.xavier_normal_(module.weight)
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
         
     def forward(self, x, targets=None, ignore_index=-1):
         
