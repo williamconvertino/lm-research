@@ -4,13 +4,29 @@ import math
 import torch
 import numpy as np
 from tqdm import tqdm
+import re
 
 DATASET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../data/datasets")
 
 class DiskDataset:
     
-    uc_translation_table = str.maketrans("", "", "�â€œ™") # Table to remove unwanted characters
-
+    replacements = {
+        "�", "", # Unknown characters 
+        "â", "",
+        "€", "",
+        "œ", "",
+        "™", "",
+        "``", '"', # Uniform quotation marks
+        "''", '"',
+        "“", '"',
+        "”", '"',
+        "‘", "'",
+        "’", "'",
+        "…", "...", # Ellipsis
+    }
+    
+    re_replace = re.compile("(%s)" % "|".join(map(re.escape, replacements.keys())))
+    
     stride_multiplier = 0.5
     shuffle_buffer_size=1024
 
@@ -75,11 +91,10 @@ class DiskDataset:
         if batch:
             yield torch.stack(batch).long()
 
-
     def preprocess(examples, tokenizer):
         # Remove unwanted characters
-        texts = [text.translate(DiskDataset.uc_translation_table) for text in examples["text"]]
-    
+        texts = [DiskDataset.re_replace.sub(lambda m: DiskDataset.replacements[m.group()], text) for text in examples["text"]]
+        
         # Tokenize text and add EOS and BOS tokens to each sequence
         examples["input_ids"] = tokenizer.encode(texts, eos=True, bos=True)
         

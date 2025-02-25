@@ -5,8 +5,6 @@ HUGGINGFACE_PATH = "bookcorpus"
 
 dataset = load_dataset(HUGGINGFACE_PATH, cache_dir=f"../data/datasets/raw", streaming=True)["train"]
 
-
-bad_chars = ['=', '>', '<', '[', ']', '{', '}', '|', '\\', '/', '*', '+', '-', '&', '%', '$', '#', '@', '^', '~', '`']
              
 for i, example in enumerate(dataset):
     
