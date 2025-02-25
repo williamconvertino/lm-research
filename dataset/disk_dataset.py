@@ -91,19 +91,19 @@ class DiskDataset:
         if batch:
             yield torch.stack(batch).long()
 
-    def preprocess(examples, tokenizer):
+    def preprocess(examples, tokenizer, separate_lines=True):
         # Remove unwanted characters
         texts = [DiskDataset.re_replace.sub(lambda m: DiskDataset.replacements[m.group()], text) for text in examples["text"]]
         
         # Tokenize text and add EOS and BOS tokens to each sequence
-        examples["input_ids"] = tokenizer.encode(texts, eos=True, bos=True)
+        examples["input_ids"] = tokenizer.encode(texts, eos=separate_lines, bos=separate_lines)
         
         return examples
 
-    def generate_data_file(dataset, file_path, tokenizer, buffer_size=1024):
+    def generate_data_file(dataset, file_path, tokenizer, separate_lines = True):
         
         # Preprocess data
-        dataset = dataset.map(lambda x: DiskDataset.preprocess(x, tokenizer), batched=True, remove_columns=["text"])
+        dataset = dataset.map(lambda x: DiskDataset.preprocess(x, tokenizer, separate_lines), batched=True, remove_columns=["text"])
         file_size = sum([len(example) for example in dataset["input_ids"]])
         
         # Initialize memmap array
@@ -113,6 +113,7 @@ class DiskDataset:
         # Write data to memmap array
         buffer = []
         write_pointer = 0
+        buffer_size=1024
         
         for sequence in tqdm(dataset["input_ids"], desc="Generating dataset files"):
             buffer.extend(sequence)
