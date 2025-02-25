@@ -70,14 +70,29 @@ class Evaluator:
         self.test_loader = splits["test"]
         self.tokenizer = tokenizer
 
-        self.device = self.get_device()
+        self.device = self._get_device()
 
-    def get_device(self):
+    def _get_device(self):
         if not torch.cuda.is_available():
             print("CUDA not available, using CPU")
             return torch.device('cpu')
-        print("Using GPU")
-        return torch.device('cuda')
+        vram_required = 14
+        print(f"Estimated VRAM required: {vram_required:.2f}GB")
+        for i in range(torch.cuda.device_count()):
+            try:
+                props = torch.cuda.get_device_properties(i)
+                gpu = torch.device(f'cuda:{i}')
+                free_memory, total_memory = torch.cuda.mem_get_info(gpu)
+                total_memory = int(total_memory / 1024**3)
+                free_memory = int(free_memory / 1024**3)  
+                if free_memory > vram_required:
+                    print(f"Using GPU [{i}]: {props.name} with {free_memory:.2f}GB")
+                    return torch.device(f'cuda:{i}')
+                else:
+                    print(f"GPU [{i}]: {props.name} only has {free_memory:.2f}GB free memory, skipping")
+            except Exception:
+                print(f"Error reading GPU [{i}], skipping")
+        raise RuntimeError("No GPU with at least 10GB of free memory found")
     
     def eval_greedy(self, num_prompts=10):
         prompts = []
