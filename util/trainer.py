@@ -158,7 +158,6 @@ class Trainer:
                         best_val_loss = val_loss
                         self.early_stopping_counter = 0
                         self._save_checkpoint()
-                        print(f"Saved checkpoint at epoch {epoch}")
                     else:
                         self.early_stopping_counter += 1
                     if self.early_stopping_counter >= self.patience:
