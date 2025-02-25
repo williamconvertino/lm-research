@@ -143,7 +143,7 @@ class Alpha(nn.Module):
         x = self.embedding(x)
         
         if targets is not None:
-            for block in enumerate(self.transformer_blocks):
+            for block in self.transformer_blocks:
                 x = block(x)
         else:
             ff_out = torch.zeros_like(x)
