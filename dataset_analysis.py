@@ -8,6 +8,7 @@ flag = False
 for i, example in enumerate(dataset):
     if "=" in example["text"]:
         flag = True
+        print("Flagged")
         
     if flag:
         print(example["text"])
