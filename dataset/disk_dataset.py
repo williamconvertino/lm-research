@@ -11,18 +11,18 @@ DATASET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../data/
 class DiskDataset:
     
     replacements = {
-        "�", "", # Unknown characters 
-        "â", "",
-        "€", "",
-        "œ", "",
-        "™", "",
-        "``", '"', # Uniform quotation marks
-        "''", '"',
-        "“", '"',
-        "”", '"',
-        "‘", "'",
-        "’", "'",
-        "…", "...", # Ellipsis
+        "�": "", # Unknown characters 
+        "â": "",
+        "€": "",
+        "œ": "",
+        "™": "",
+        "``": '"', # Uniform quotation marks
+        "''": '"',
+        "“": '"',
+        "”": '"',
+        "‘": "'",
+        "’": "'",
+        "…": "..." # Ellipsis
     }
     
     re_replace = re.compile("(%s)" % "|".join(map(re.escape, replacements.keys())))
