@@ -8,6 +8,5 @@ for i, example in enumerate(dataset):
     print("=" * 10)
     if "=" in example["text"]:
         print(example["text"])
-    print(example)    
     if i > 1000:
         break
