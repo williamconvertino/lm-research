@@ -11,14 +11,14 @@ from util.loading import load_model, load_most_recent_checkpoint, load_config
 def main():
     parser = ArgumentParser()
     parser.add_argument("--train", type=str)
-    parser.add_argument("--eval", type=str)
+    parser.add_argument("--eval", type=str, nargs="+")
     parser.add_argument("--dataset", type=str, default="tiny_stories")
     args = parser.parse_args()
 
     assert args.train or args.eval, "Must specify either training or evaluation"
     assert not (args.train and args.eval), "Cannot specify both training and evaluation"
 
-    config = load_config(args.train) if args.train else load_config(args.eval)
+    config = load_config(args.train) if args.train else load_config(args.eval[0])
     
     tokenizer = Tokenizer()
     config.vocab_size = tokenizer.vocab_size
