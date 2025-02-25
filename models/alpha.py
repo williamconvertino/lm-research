@@ -84,6 +84,8 @@ class TransformerBlock(nn.Module):
         
         self.use_ff = getattr(config, 'use_ff', True)
         
+        print(f"use_ff={self.use_ff}")
+        
         self.ln_1 = nn.LayerNorm(config.d_embed)
         self.attention = Attention(config)
         
