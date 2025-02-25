@@ -13,7 +13,7 @@ def load_most_recent_checkpoint(model):
     checkpoint_path = os.path.join(CHECKPOINT_DIR, f"{model.config.name}.pt")
     if not os.path.exists(checkpoint_path):
         return None
-    return torch.load(checkpoint_path, weights_only=False)
+    return torch.load(checkpoint_path, weights_only=False, map_location="cpu")
 
 def load_model(config):
     
