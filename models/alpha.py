@@ -82,19 +82,24 @@ class TransformerBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         
-        self.attention = Attention(config)
-        self.feed_forward = FeedForward(config)
-        self.ln_1 = nn.LayerNorm(config.d_embed)
-        self.ln_2 = nn.LayerNorm(config.d_embed)
+        self.use_ff = getattr(config, 'use_ff', True)
         
-    def forward(self, x):
+        self.ln_1 = nn.LayerNorm(config.d_embed)
+        self.attention = Attention(config)
+        
+        if self.use_ff:
+            self.ln_2 = nn.LayerNorm(config.d_embed)
+            self.feed_forward = FeedForward(config)
+        
+    def forward(self, x, inference_mode=False):
         x = self.ln_1(x)
         x = x + self.attention(x)
-        x = self.ln_2(x)
-        x = x + self.feed_forward(x)
+        if self.use_ff and not inference_mode:
+            x = self.ln_2(x)
+            x = x + self.feed_forward(x)
         return x
 
-class TLM(nn.Module):
+class Alpha(nn.Module):
     def __init__(self, config):
         super().__init__()
         
@@ -102,7 +107,7 @@ class TLM(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
 
-        self.transformer_blocks = nn.Sequential(*[TransformerBlock(config) for _ in range(config.n_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
         self.ln_f = nn.LayerNorm(config.d_embed)
 
@@ -128,7 +133,11 @@ class TLM(nn.Module):
         B, S = x.shape
 
         x = self.embedding(x)
-        x = self.transformer_blocks(x)
+        
+        for i, layer in enumerate(self.transformer_blocks):
+            inference_mode = targets is None and i != len(self.transformer_blocks) - 1
+            x = layer(x, inference_mode=inference_mode)
+        
         x = self.ln_f(x)
         
         logits = self.lm_head(x)
