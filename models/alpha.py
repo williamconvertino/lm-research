@@ -93,12 +93,18 @@ class TransformerBlock(nn.Module):
             self.ln_2 = nn.LayerNorm(config.d_embed)
             self.feed_forward = FeedForward(config)
         
-    def forward(self, x, inference_mode=False):
-        x = self.ln_1(x)
-        x = x + self.attention(x)
-        if self.use_ff and not inference_mode:
-            x = self.ln_2(x)
-            x = x + self.feed_forward(x)
+    def forward_inference(self, x, ff_out):
+        
+        ff_in = ff_out + x
+        x = x + self.attention(self.ln_1(ff_in))
+        ff_out = self.feed_forward(self.ln_2(x))
+        
+        return x, ff_out
+
+    def forward(self, x):
+        x = x + self.attention(self.ln_1(x))
+        if self.use_ff:
+            x = x + self.feed_forward(self.ln_2(x))
         return x
 
 class Alpha(nn.Module):
@@ -136,10 +142,18 @@ class Alpha(nn.Module):
 
         x = self.embedding(x)
         
-        for i, layer in enumerate(self.transformer_blocks):
-            inference_mode = targets is None and i != len(self.transformer_blocks) - 1
-            x = layer(x, inference_mode=inference_mode)
-        
+        if targets is not None:
+            for block in enumerate(self.transformer_blocks):
+                x = block(x)
+        else:
+            ff_out = torch.zeros_like(x)
+            for i, block in enumerate(self.transformer_blocks):
+                if i == len(self.transformer_blocks) - 1:
+                    x = x + ff_out
+                    x = block(x)
+                else:
+                    x, ff_out = block.forward_inference(x, ff_out)
+                
         x = self.ln_f(x)
         
         logits = self.lm_head(x)
