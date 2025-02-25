@@ -22,7 +22,7 @@ def generate_text_greedy(model, tokenizer, prompt, max_length=50, temperature=1.
         next_token = torch.multinomial(probabilities, num_samples=1)
         generated = torch.cat((generated, next_token), dim=1).to(device)
         
-        if next_token.item() == tokenizer.eos_id:
+        if next_token.item() == tokenizer.eos_token_id:
             break
     
     return tokenizer.decode(generated[0].tolist()[input_size:])
@@ -58,7 +58,7 @@ def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, de
         new_beams = sorted(new_beams, key=lambda x: x[1], reverse=True)[:beam_width]
         beams = new_beams
         
-        if all(seq[0, -1].item() == tokenizer.eos_id for seq, _ in beams):
+        if all(seq[0, -1].item() == tokenizer.eos_token_id for seq, _ in beams):
             break
 
     best_seq = beams[0][0]
@@ -87,7 +87,7 @@ class Evaluator:
                 break
             example = batch[0]
             prompt = example.tolist()[:50] # Use first 50 tokens as prompt
-            prompt = [token for token in prompt if token != self.tokenizer.pad_id]
+            prompt = [token for token in prompt if token != self.tokenizer.pad_token_id]
             prompt_text = self.tokenizer.decode(prompt)  
             prompts.append(prompt_text)
         
@@ -107,7 +107,7 @@ class Evaluator:
                 break
             example = batch[0]
             prompt = example.tolist()[:50] # Use first 50 tokens as prompt
-            prompt = [token for token in prompt if token != self.tokenizer.pad_id]
+            prompt = [token for token in prompt if token != self.tokenizer.pad_token_id]
             prompt_text = self.tokenizer.decode(prompt)  
             prompts.append(prompt_text)
 
