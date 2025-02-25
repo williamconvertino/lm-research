@@ -7,5 +7,5 @@ dataset = load_dataset(HUGGINGFACE_PATH, cache_dir=f"../data/datasets/raw", stre
 for i, example in enumerate(dataset):
     print("=" * 10)
     print(example)    
-    if i > 50:
+    if i > 200:
         break
