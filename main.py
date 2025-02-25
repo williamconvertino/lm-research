@@ -18,7 +18,7 @@ def main():
     assert args.train or args.eval, "Must specify either training or evaluation"
     assert not (args.train and args.eval), "Cannot specify both training and evaluation"
 
-    config = load_config(args.train) if args.train else load_config(args.eval[0])
+    config = load_config(args.train) if args.train else load_config(args.eval)
     
     tokenizer = Tokenizer()
     config.vocab_size = tokenizer.vocab_size

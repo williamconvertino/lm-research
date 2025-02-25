@@ -13,7 +13,7 @@ class Trainer:
     grad_clip = 1.0
     max_epochs = 20
     patience = 5
-    val_interval_multiplier = 0.01
+    save_interval_multiplier = 0.01
 
     def __init__(self, model, splits, tokenizer, checkpoint=None):
         self.model = model
@@ -23,7 +23,7 @@ class Trainer:
         self.device = self._get_device()
 
         self.num_training_steps = len(self.train_loader)
-        self.num_val_steps = int(self.num_training_steps * self.val_interval_multiplier)
+        self.num_save_steps = int(self.num_training_steps * self.save_interval_multiplier)
         self.early_stopping_counter = 0
 
         self.num_warmup_steps = int(self.num_training_steps * 0.1)
@@ -42,9 +42,13 @@ class Trainer:
         )
 
         self.save_path = f"checkpoints/{self.model.config.name}.pt"
-        if checkpoint is None:
+        self.resume_checkpoint = checkpoint is not None
+        if self.resume_checkpoint:
+            self.checkpoint = checkpoint
+        else:
             self.checkpoint = {
                 'epoch': 0,
+                'step': 0,
                 'model_state_dict': self.model.state_dict(),
                 'optimizer_state_dict': self.optimizer.state_dict(),
                 'scheduler_state_dict': self.scheduler.state_dict(),
@@ -55,8 +59,6 @@ class Trainer:
                     'val_perplexity': [],
                 }
             }
-        else:
-            self.checkpoint = checkpoint
 
     def _get_device(self):
         if not torch.cuda.is_available():
@@ -118,9 +120,17 @@ class Trainer:
         val_perplexity = float("inf")
         best_val_loss = float("inf")
 
-        for epoch in range(self.checkpoint["epoch"], self.max_epochs):
+        for epoch in range(self.max_epochs):
+            
+            if self.resume_checkpoint and epoch <= self.checkpoint["epoch"]:
+                print(f"Skipping epoch {epoch} (already completed)")
+                continue
             
             for i, batch in enumerate(self.train_loader):
+                
+                if self.resume_checkpoint and epoch == self.checkpoint["epoch"] and i <= self.checkpoint["step"]:
+                    print(f"\r[Epoch {epoch} | Step {i}/{len(self.train_loader)}] Skipping (already completed)", end="")
+                    continue
 
                 train_loss = self._step(batch)
         
@@ -131,31 +141,31 @@ class Trainer:
                 self.scheduler.step()
                 train_loss = train_loss.item()
 
-                if i != 0 and (i % self.num_val_steps == 0 or i == len(self.train_loader) - 1):
+                if i != 0 and (i % self.num_save_steps == 0 or i == len(self.train_loader) - 1):
                     val_loss = self._validate()
                     val_perplexity = math.exp(min(val_loss, 100))
                     step = i + epoch * len(self.train_loader)
                     self.checkpoint["history"]["train_loss"].append((step, train_loss))
                     self.checkpoint["history"]["val_loss"].append((step, val_loss))
                     self.checkpoint["history"]["val_perplexity"].append((step, val_perplexity))
-            
+                    self.checkpoint["epoch"] = epoch
+                    self.checkpoint["step"] = i
+                    self.checkpoint["model_state_dict"] = self.model.state_dict()
+                    self.checkpoint["optimizer_state_dict"] = self.optimizer.state_dict()
+                    self.checkpoint["scheduler_state_dict"] = self.scheduler.state_dict()
+                    
+                    if val_loss < best_val_loss:
+                        best_val_loss = val_loss
+                        self.early_stopping_counter = 0
+                        self._save_checkpoint()
+                        print(f"Saved checkpoint at epoch {epoch}")
+                    else:
+                        self.early_stopping_counter += 1
+                    if self.early_stopping_counter >= self.patience:
+                        print(f"Early stopping triggered after {epoch} epochs")
+                        break
+                    
                 time_remaining = self._get_time_remaining(i, start_time)
                 print(f"\r[Epoch {epoch} | Step {i}/{len(self.train_loader)}] train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val ppl: {val_perplexity:.4f} | time remaining: {time_remaining}", end="")
             
             print(f"Epoch {epoch} | train loss: {train_loss:.4f} | val loss: {val_loss:.4f} | val ppl: {val_perplexity:.4f} | best val loss: {best_val_loss:.4f}")
-
-            self.checkpoint["epoch"] = epoch
-            self.checkpoint["model_state_dict"] = self.model.state_dict()
-            self.checkpoint["optimizer_state_dict"] = self.optimizer.state_dict()
-            self.checkpoint["scheduler_state_dict"] = self.scheduler.state_dict()
-            
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                self.early_stopping_counter = 0
-                self._save_checkpoint()
-                print(f"Saved checkpoint at epoch {epoch}")
-            else:
-                self.early_stopping_counter += 1
-            if self.early_stopping_counter >= self.patience:
-                print(f"Early stopping triggered after {epoch} epochs")
-                break
