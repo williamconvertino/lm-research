@@ -64,7 +64,7 @@ class Trainer:
         if not torch.cuda.is_available():
             print("CUDA not available, using CPU")
             return torch.device('cpu')
-        vram_required = 14
+        vram_required = 10
         print(f"Estimated VRAM required: {vram_required:.2f}GB")
         for i in range(torch.cuda.device_count()):
             try:
@@ -80,7 +80,7 @@ class Trainer:
                     print(f"GPU [{i}]: {props.name} only has {free_memory:.2f}GB free memory, skipping")
             except Exception:
                 print(f"Error reading GPU [{i}], skipping")
-        raise RuntimeError("No GPU with at least 10GB of free memory found")
+        raise RuntimeError(f"No GPU with at least {vram_required}GB of free memory found")
     
     def _save_checkpoint(self):
         if not os.path.exists(self.save_path):
