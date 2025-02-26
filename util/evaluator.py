@@ -68,7 +68,7 @@ def generate_text_beam(model, tokenizer, prompt, max_length=50, beam_width=3, de
 class Evaluator:
     def __init__(self, model, splits, tokenizer):
         self.model = model
-        self.test_loader = splits["test"]
+        self.splits = splits
         self.tokenizer = tokenizer
 
         self.device = self._get_device()
@@ -98,7 +98,7 @@ class Evaluator:
     def eval_greedy(self, num_prompts=10):
         prompts = []
         
-        for i, batch in enumerate(self.test_loader):
+        for i, batch in enumerate(self.splits["test"]):
             if i >= num_prompts:
                 break
             example = batch[0]
@@ -118,7 +118,7 @@ class Evaluator:
     def eval_beam(self, num_prompts=10):
         prompts = []
             
-        for i, batch in enumerate(self.test_loader):
+        for i, batch in enumerate(self.splits["test"]):
             if i >= num_prompts:
                 break
             example = batch[0]
@@ -136,7 +136,7 @@ class Evaluator:
             print("*"*50)
             
     def eval_loss(self):
-        trainer = Trainer(self.model, self.test_loader, self.tokenizer, self.device)
+        trainer = Trainer(self.model, self.splits, self.tokenizer, self.device)
         loss = trainer.validate()
         print("="*50)
         print(f"Validation Loss: {loss:.4f}")
