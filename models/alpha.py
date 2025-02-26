@@ -93,18 +93,12 @@ class TransformerBlock(nn.Module):
             self.ln_2 = nn.LayerNorm(config.d_embed)
             self.feed_forward = FeedForward(config)
         
-    def forward_inference(self, x_1, x_2):
+    def forward(self, x_1, x_2):
         
         x_1 = x_1 + self.attention(self.ln_1(x_2))
         x_2 = x_1 + self.feed_forward(self.ln_2(x_1))
         
         return x_1, x_2
-
-    def forward(self, x):
-        x = x + self.attention(self.ln_1(x))
-        if self.use_ff:
-            x = x + self.feed_forward(self.ln_2(x))
-        return x
 
 class Alpha(nn.Module):
     def __init__(self, config):
@@ -142,25 +136,10 @@ class Alpha(nn.Module):
         x_1 = self.embedding(x)
         x_2 = x_1
         
-        # for block in self.transformer_blocks:
-        #     x_1 = block(x_1)
-        
-        # if targets is not None:
-        #     for block in self.transformer_blocks:
-        #         x = block(x)
-        # else:
-        for i, block in enumerate(self.transformer_blocks):
-            
-            if i == len(self.transformer_blocks) - 1:
-                x = x_1 + x_2
-                x = block(x)
-            else:
-                x_1, x_2 = block.forward_inference(x_1, x_2)
-        
-        # for i, block in enumerate(self.transformer_blocks):
-        #     x_1, x_2 = block.forward_inference(x_1, x_2)
+        for block in enumerate(self.transformer_blocks):
+            x_1, x_2 = block(x_1, x_2)
                 
-        x = self.ln_f(x)
+        x = self.ln_f(x_2)
         
         logits = self.lm_head(x)
         
