@@ -103,7 +103,7 @@ class TransformerBlock(nn.Module):
         f = f + self.attention(self.ln_1(w), self.ln_1(w), self.ln_1(f))
         ex = w + self.feed_forward(self.ln_2(torch.cat([w, f], dim=-1)))
 
-        return ex, f
+        return w, ex, f
 
 class Delta(nn.Module):
     def __init__(self, config):
