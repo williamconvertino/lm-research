@@ -152,7 +152,7 @@ class Alpha(nn.Module):
         for i, block in enumerate(self.transformer_blocks):
             
             if i == len(self.transformer_blocks) - 1:
-                x = x_1
+                x = x_2
                 x = block(x)
             else:
                 x_1, x_2 = block.forward_inference(x_1, x_2)
