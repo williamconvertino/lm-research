@@ -21,6 +21,7 @@ class Trainer:
         self.val_loader = splits["val"]
         self.tokenizer = tokenizer
         self.device = self._get_device()
+        self.model.to(self.device)
 
         self.num_training_steps = len(self.train_loader)
         self.num_save_steps = int(self.num_training_steps * self.save_interval_multiplier)
@@ -102,7 +103,7 @@ class Trainer:
         _, loss = self.model(x, targets=targets, ignore_index=self.tokenizer.pad_token_id)
         return loss
 
-    def _validate(self):
+    def validate(self):
         self.model.eval()
         loss = 0.0
         with torch.no_grad():
@@ -113,7 +114,7 @@ class Trainer:
 
     def train(self):
         self.model.train()
-        self.model.to(self.device)
+        
         start_time = time.time()
         
         val_loss = float("inf")
@@ -142,7 +143,7 @@ class Trainer:
                 train_loss = train_loss.item()
 
                 if i != 0 and (i % self.num_save_steps == 0 or i == len(self.train_loader) - 1):
-                    val_loss = self._validate()
+                    val_loss = self.validate()
                     val_perplexity = math.exp(min(val_loss, 100))
                     step = i + epoch * len(self.train_loader)
                     self.checkpoint["history"]["train_loss"].append((step, train_loss))

@@ -1,6 +1,7 @@
 import random
 import torch
 import torch.nn.functional as F
+from .trainer import Trainer
 
 def generate_text_greedy(model, tokenizer, prompt, max_length=50, temperature=1.0, device="gpu"):
     model.to(device)
@@ -133,3 +134,10 @@ class Evaluator:
             print("Beam Output:")
             print(generate_text_beam(self.model, self.tokenizer, prompt, device=self.device))
             print("*"*50)
+            
+    def eval_loss(self):
+        trainer = Trainer(self.model, self.test_loader, self.tokenizer, self.device)
+        loss = trainer.validate()
+        print("="*50)
+        print(f"Validation Loss: {loss:.4f}")
+        print("="*50)
