@@ -149,17 +149,18 @@ class Alpha(nn.Module):
         #     for block in self.transformer_blocks:
         #         x = block(x)
         # else:
-        # for i, block in enumerate(self.transformer_blocks):
-            # if i == len(self.transformer_blocks) - 1:
-            #     x = x + ff_out
-            #     x = block(x)
-            # else:
-            # x_1, x_2 = block.forward_inference(x_1, x_2)
-        
         for i, block in enumerate(self.transformer_blocks):
-            x_1, x_2 = block.forward_inference(x_1, x_2)
+            
+            if i == len(self.transformer_blocks) - 1:
+                x = x_1 + x_2
+                x = block(x)
+            else:
+                x_1, x_2 = block.forward_inference(x_1, x_2)
+        
+        # for i, block in enumerate(self.transformer_blocks):
+        #     x_1, x_2 = block.forward_inference(x_1, x_2)
                 
-        x = self.ln_f(x_1 + x_2)
+        x = self.ln_f(x)
         
         logits = self.lm_head(x)
         
