@@ -142,17 +142,20 @@ class Alpha(nn.Module):
 
         x = self.embedding(x)
         
-        if targets is not None:
-            for block in self.transformer_blocks:
-                x = block(x)
-        else:
-            ff_out = torch.zeros_like(x)
-            for i, block in enumerate(self.transformer_blocks):
-                if i == len(self.transformer_blocks) - 1:
-                    x = x + ff_out
-                    x = block(x)
-                else:
-                    x, ff_out = block.forward_inference(x, ff_out)
+        for block in self.transformer_blocks:
+            x = block(x)
+        
+        # if targets is not None:
+        #     for block in self.transformer_blocks:
+        #         x = block(x)
+        # else:
+        #     ff_out = torch.zeros_like(x)
+        #     for i, block in enumerate(self.transformer_blocks):
+        #         if i == len(self.transformer_blocks) - 1:
+        #             x = x + ff_out
+        #             x = block(x)
+        #         else:
+        #             x, ff_out = block.forward_inference(x, ff_out)
                 
         x = self.ln_f(x)
         
