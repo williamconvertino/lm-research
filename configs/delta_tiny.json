@@ -1,5 +1,5 @@
 {
-    "model": "epsil",
+    "model": "delta",
     "max_seq_len": 256,
     "d_embed": 192,
     "n_layers": 3,
