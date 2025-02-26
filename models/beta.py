@@ -10,14 +10,18 @@ class Attention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Linear(config.d_embed, config.d_embed, bias=False)
-        self.W_k = nn.Linear(config.d_embed, config.d_embed, bias=False)
-        self.W_v = nn.Linear(config.d_embed, config.d_embed, bias=False)
-        self.W_o = nn.Linear(config.d_embed, config.d_embed, bias=False)
+        self.d_tri = config.d_embed // 3
+        
+        self.W_q = nn.Linear(self.d_tri, self.d_tri, bias=False)
+        self.W_k = nn.Linear(self.d_tri, self.d_tri, bias=False)
+        
+        self.W_v_diag = nn.Parameter(torch.randn(self.d_tri))
+        
+        self.W_o = nn.Linear(self.d_tri, self.d_tri, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
-        self.rotary_embeddings = RotaryPositionalEmbeddings(config.d_embed // config.n_heads)
+        self.rotary_embeddings = RotaryPositionalEmbeddings(self.d_tri // config.n_heads)
         
         self.drop_attn = nn.Dropout(0.1)
         self.drop_resid = nn.Dropout(0.1)
@@ -33,11 +37,13 @@ class Attention(nn.Module):
             
         q = self.W_q(q) # (B, S, d_embed)
         k = self.W_k(k)
-        v = self.W_v(v)
         
-        q = q.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
-        k = k.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
-        v = v.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
+        W_v = torch.diag(self.W_v_diag)
+        v = torch.matmul(v, W_v)
+        
+        q = q.view(B, S, self.config.n_heads, self.d_tri // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
+        k = k.view(B, S, self.config.n_heads, self.d_tri // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
+        v = v.view(B, S, self.config.n_heads, self.d_tri // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
         
         q = self.rotary_embeddings(q)
         k = self.rotary_embeddings(k)
@@ -55,7 +61,7 @@ class Attention(nn.Module):
         attn_probs = self.drop_attn(attn_probs)
         
         attn_output = torch.matmul(attn_probs, v)
-        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.config.d_embed)
+        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.d_tri)
         attn_output = self.W_o(attn_output)
         attn_output = self.drop_resid(attn_output)
         
@@ -65,8 +71,10 @@ class FeedForward(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.fc_1 = nn.Linear(config.d_embed, 4 * config.d_embed)
-        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed)
+        self.d_tri = config.d_embed // 3
+        
+        self.fc_1 = nn.Linear(2 * self.d_tri, 4 * config.d_embed)
+        self.fc_2 = nn.Linear(4 * config.d_embed, self.d_tri)
         
         self.activation = nn.GELU()    
         self.drop = nn.Dropout(0.1)
@@ -84,16 +92,16 @@ class TransformerBlock(nn.Module):
         
         self.d_tri = config.d_embed // 3
         
-        self.ln_1 = nn.LayerNorm(config.d_embed)
+        self.ln_1 = nn.LayerNorm(config.d_tri)
         self.attention = Attention(config)
         
-        self.ln_2 = nn.LayerNorm(config.d_embed)
+        self.ln_2 = nn.LayerNorm(2 * config.d_tri)
         self.feed_forward = FeedForward(config)
         
-    def forward(self, x):
-        x = x + self.attention(self.ln_1(x))
-        x = x + self.feed_forward(self.ln_2(x))
-        return x
+    def forward(self, x_qk, x_v, f):
+        
+        f = f + self.attention(self.ln_1(x_qk), self.ln_1(x_qk), self.ln_1(x_v))
+        x_v = x_v + self.feed_forward(self.ln_2(torch.cat([x_qk, f], dim=-1)))
 
 class Beta(nn.Module):
     def __init__(self, config):
@@ -130,14 +138,14 @@ class Beta(nn.Module):
         
         B, S = x.shape
 
-        e = self.embedding(x)
-        ff_out = e
-        f = torch.zeros_like(e)
+        x_qk = self.embedding(x)
+        x_v = x_qk
+        f = torch.zeros_like(x_qk)
         
         for block in self.transformer_blocks:
-             = block(x)
+            x_qk, x_v, f = block(x_qk, x_v, f)
                 
-        x = self.ln_f(x)
+        x = self.ln_f(f)
         
         logits = self.lm_head(x)
         
