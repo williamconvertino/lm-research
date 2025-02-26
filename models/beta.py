@@ -103,6 +103,8 @@ class TransformerBlock(nn.Module):
         f = f + self.attention(self.ln_1(x_qk), self.ln_1(x_qk), self.ln_1(x_v))
         x_v = x_v + self.feed_forward(self.ln_2(torch.cat([x_qk, f], dim=-1)))
 
+        return x_qk, x_v, f
+
 class Beta(nn.Module):
     def __init__(self, config):
         super().__init__()
