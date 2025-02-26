@@ -152,10 +152,10 @@ class Alpha(nn.Module):
             ff_out = torch.zeros_like(x)
             for i, block in enumerate(self.transformer_blocks):
                 if i == len(self.transformer_blocks) - 1:
-                #     x = x + ff_out
-                #     x = block(x)
-                # else:
-                x, ff_out = block.forward_inference(x, ff_out)
+                    x = x + ff_out
+                    x = block(x)
+                else:
+                    x, ff_out = block.forward_inference(x, ff_out)
                 
         x = self.ln_f(x)
         
