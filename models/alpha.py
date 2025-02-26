@@ -139,7 +139,7 @@ class Alpha(nn.Module):
         for block in self.transformer_blocks:
             x_1, x_2 = block(x_1, x_2)
                 
-        x = self.ln_f(x_2)
+        x = self.ln_f(x_1)
         
         logits = self.lm_head(x)
         
