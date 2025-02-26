@@ -151,7 +151,7 @@ class Alpha(nn.Module):
         else:
             ff_out = torch.zeros_like(x)
             for i, block in enumerate(self.transformer_blocks):
-                # if i == len(self.transformer_blocks) - 1:
+                if i == len(self.transformer_blocks) - 1:
                 #     x = x + ff_out
                 #     x = block(x)
                 # else:
