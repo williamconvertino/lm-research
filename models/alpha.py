@@ -136,7 +136,7 @@ class Alpha(nn.Module):
         x_1 = self.embedding(x)
         x_2 = x_1
         
-        for block in enumerate(self.transformer_blocks):
+        for block in self.transformer_blocks:
             x_1, x_2 = block(x_1, x_2)
                 
         x = self.ln_f(x_2)
