@@ -10,10 +10,10 @@ class Attention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Linear(config.d_tri, config.d_embed, bias=False)
-        self.W_k = nn.Linear(config.d_tri, config.d_embed, bias=False)
+        self.W_q = nn.Linear(2 * config.d_tri, config.d_embed, bias=False)
+        self.W_k = nn.Linear(2 * config.d_tri, config.d_embed, bias=False)
         self.W_v = nn.Linear(config.d_tri, config.d_tri, bias=False)
-        self.W_o = nn.Linear(config.d_embed, config.d_tri, bias=False)
+        self.W_o = nn.Linear(config.d_tri, config.d_tri, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -28,22 +28,18 @@ class Attention(nn.Module):
             
         q = self.W_q(q) # (B, S, d_embed)
         k = self.W_k(k)
+        v = self.W_v(v)
         
         q = q.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
         k = k.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
+        v = v.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
         
         q = self.rotary_embeddings(q)
         k = self.rotary_embeddings(k)
         
         q = q.transpose(1, 2) # (B, n_heads, S, d_embed // n_heads)
         k = k.transpose(1, 2) # (B, n_heads, S, d_embed // n_heads)
-        
-        
-        v = self.W_v(v) # (B, S, d_tri)
-        v = v.view(B, S, self.config.n_heads, self.config.d_tri // self.config.n_heads)        
         v = v.transpose(1, 2) # (B, n_heads, S, d_embed // n_heads)
-        
-        v = torch.cat([v, torch.zeros_like(v)], dim=-1)
         
         causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().to(q.device)
         
