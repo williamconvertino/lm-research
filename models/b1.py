@@ -138,7 +138,7 @@ class B1(nn.Module):
             self.embedding.weight -= self.embedding.weight.mean(0, keepdim=True) # Zero mean
 
         e = self.embedding(x) # Start with E[W_c] = 0
-        ex = ex
+        ex = e
         f = torch.zeros_like(ex)
         
         for block in self.transformer_blocks:
