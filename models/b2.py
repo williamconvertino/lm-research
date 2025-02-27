@@ -12,7 +12,8 @@ class Attention(nn.Module):
         
         self.W_q = nn.Parameter(torch.zeros(config.n_heads, 2 * config.d_tri, config.d_embed))
         self.W_k = nn.Parameter(torch.zeros(config.n_heads, 2 * config.d_tri, config.d_embed))
-        self.W_v = nn.Parameter(torch.zeros(config.n_heads, config.d_tri, config.d_tri))
+        # self.W_v = nn.Parameter(torch.zeros(config.n_heads, config.d_tri, config.d_tri))
+        self.W_v_diag = nn.Parameter(torch.zeros(config.n_heads, config.d_tri))
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -36,7 +37,8 @@ class Attention(nn.Module):
             
         q = torch.einsum('b s h e, h e d -> b s h d', q, self.W_q) # (B, S, n_heads, d_embed)
         k = torch.einsum('b s h e, h e d -> b s h d', k, self.W_k)
-        v = torch.einsum('b s h e, h e d -> b s h d', v, self.W_v)
+        W_v = torch.diag_embed(self.W_v_diag)  # (n_heads, d_tri, d_tri)
+        v = torch.einsum('b s h e, h e d -> b s h d', v, W_v)
         
         q = self.rotary_embeddings(q) # (B, S, n_heads, d_embed)
         k = self.rotary_embeddings(k)
@@ -99,7 +101,7 @@ class TransformerBlock(nn.Module):
         
         return e, ex, f
 
-class B1(nn.Module):
+class B2(nn.Module):
     def __init__(self, config):
         super().__init__()
         
@@ -142,7 +144,7 @@ class B1(nn.Module):
         f = torch.zeros_like(ex)
         
         for block in self.transformer_blocks:
-            e, ex, f = block(e, x, f)
+            e, ex, f = block(e, ex, f)
         
         f = self.ff_out(torch.cat([e, f], dim=-1))
         

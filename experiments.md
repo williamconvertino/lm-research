@@ -14,8 +14,8 @@ A_3 (Both)
 - x, ex -> attn -> f, x
 - x, f -> ff -> ex
 
-B_0 (Full W_v)
-B_1 (Diag W_v)
-B_2 (Diag W_v, no P)
+B_0 (Full W_v and P)
+B_1 (Summed P)
+B_2 (Diag W_v, summed P)
 B_3 (Erasure head 0)
 B_4 (Erasure head w_y_i)
