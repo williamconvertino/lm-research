@@ -17,7 +17,7 @@ class Attention(nn.Module):
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
-        self.rotary_embeddings = RotaryPositionalEmbeddings(config.d_embed // config.n_heads)
+        self.rotary_embeddings = RotaryPositionalEmbeddings(config.d_embed)
         
         self.drop_attn = nn.Dropout(0.1)
         self.drop_resid = nn.Dropout(0.1)
@@ -38,9 +38,6 @@ class Attention(nn.Module):
         q = torch.einsum('b s h e, h e d -> b s h d', q, self.W_q) # (B, S, n_heads, d_embed)
         k = torch.einsum('b s h e, h e d -> b s h d', k, self.W_k)
         v = torch.einsum('b s h e, h e d -> b s h d', v, self.W_v)
-        
-        
-        print(q.shape)
         
         q = self.rotary_embeddings(q) # (B, S, n_heads, d_embed)
         k = self.rotary_embeddings(k)
