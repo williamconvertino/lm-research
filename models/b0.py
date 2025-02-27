@@ -13,7 +13,7 @@ class Attention(nn.Module):
         self.W_q = nn.Linear(2 * config.d_tri, config.d_embed, bias=False)
         self.W_k = nn.Linear(2 * config.d_tri, config.d_embed, bias=False)
         self.W_v = nn.Linear(config.d_tri, config.d_tri, bias=False)
-        self.W_o = nn.Linear(config.d_tri, config.d_tri, bias=False)
+        self.W_o = nn.Linear(config.d_tri, 2 * config.d_tri, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
