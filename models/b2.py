@@ -142,7 +142,7 @@ class B1(nn.Module):
         f = torch.zeros_like(ex)
         
         for block in self.transformer_blocks:
-            e, ex, f = block(e, ex, f)
+            e, ex, f = block(e, x, f)
         
         f = self.ff_out(torch.cat([e, f], dim=-1))
         
