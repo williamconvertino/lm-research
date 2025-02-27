@@ -54,8 +54,10 @@ class Attention(nn.Module):
         attn_probs = self.drop_attn(attn_probs)
         
         attn_output = torch.matmul(attn_probs, v)
-        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.config.d_embed * self.config.n_heads)
-        # attn_output = self.W_o(attn_output)
+        attn_output = attn_output.transpose(1, 2) # (B, S, n_heads, d_embed)
+        
+        attn_output = torch.sum(attn_output, dim=2) # (B, S, d_embed)
+        
         attn_output = self.drop_resid(attn_output)
         
         return attn_output
@@ -86,16 +88,16 @@ class TransformerBlock(nn.Module):
         self.ln_1 = nn.LayerNorm(2 * config.d_tri)
         self.ln_2 = nn.LayerNorm(2 * config.d_tri)
         
-    def forward(self, ex, f_plus):
+    def forward(self, e, ex, f):
         
-        q = k = self.ln_1(f_plus)
+        q = k = torch.cat([e, f], dim=-1)
         v = ex
         
-        f_plus = f_plus + self.attention(q=q, k=k, v=v)        
+        f = f + self.attention(q=q, k=k, v=v)
         
-        ex = ex + self.feed_forward(self.ln_2(f_plus))
+        ex = ex + self.feed_forward(self.ln_2(torch.cat([e, f], dim=-1)))
         
-        return ex, f_plus
+        return e, ex, f
 
 class B1(nn.Module):
     def __init__(self, config):
@@ -135,14 +137,14 @@ class B1(nn.Module):
         with torch.no_grad():
             self.embedding.weight -= self.embedding.weight.mean(0, keepdim=True) # Zero mean
 
-        ex = self.embedding(x) # Start with E[W_c] = 0
-        
-        f_plus = torch.cat([ex, torch.zeros_like(ex)], dim=-1) # Combined f and covariate terms
+        e = self.embedding(x) # Start with E[W_c] = 0
+        ex = ex
+        f = torch.zeros_like(ex)
         
         for block in self.transformer_blocks:
-            ex, f_plus = block(ex, f_plus)
+            e, ex, f = block(e, x, f)
         
-        f = self.ff_out(f_plus)
+        f = self.ff_out(torch.cat([e, f], dim=-1))
         
         f = self.ln_f(f)
         
