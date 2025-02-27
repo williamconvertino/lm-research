@@ -129,8 +129,6 @@ class A3(nn.Module):
 
         with torch.no_grad():
             self.embedding.weight -= self.embedding.weight.mean(0, keepdim=True) # Zero mean
-
-        x = self.embedding(x)
         
         x_1 = self.embedding(x)
         x_2 = x_1

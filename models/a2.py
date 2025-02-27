@@ -126,8 +126,6 @@ class A2(nn.Module):
     def forward(self, x, targets=None, ignore_index=-1):
         
         B, S = x.shape
-
-        x = self.embedding(x)
         
         x_1 = self.embedding(x)
         x_2 = x_1
