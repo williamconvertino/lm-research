@@ -50,7 +50,7 @@ class Attention(nn.Module):
         attn_probs = self.drop_attn(attn_probs)
         
         attn_output = torch.matmul(attn_probs, v)
-        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.config.d_embed)
+        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.config.d_tri)
         attn_output = self.W_o(attn_output)
         attn_output = self.drop_resid(attn_output)
         
