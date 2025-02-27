@@ -31,9 +31,9 @@ class Attention(nn.Module):
         if v is None:
             v = q
         
-        q = q.repeat(1, 1, self.config.n_head).view(B, S, self.config.n_heads, self.config.d_embed) # (B, n_heads, S, d_embed)
-        k = k.repeat(1, 1, self.config.n_head).view(B, S, self.config.n_heads, self.config.d_embed)
-        v = v.repeat(1, 1, self.config.n_head).view(B, S, self.config.n_heads, self.config.d_embed)
+        q = q.repeat(1, 1, self.config.n_heads).view(B, S, self.config.n_heads, self.config.d_embed) # (B, n_heads, S, d_embed)
+        k = k.repeat(1, 1, self.config.n_heads).view(B, S, self.config.n_heads, self.config.d_embed)
+        v = v.repeat(1, 1, self.config.n_heads).view(B, S, self.config.n_heads, self.config.d_embed)
             
         q = q @ self.W_q
         k = k @ self.W_k
