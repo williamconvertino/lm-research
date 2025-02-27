@@ -13,7 +13,7 @@ class Attention(nn.Module):
         self.W_q = nn.Parameter(torch.zeros(config.n_heads, 2 * config.d_tri, config.d_embed))
         self.W_k = nn.Parameter(torch.zeros(config.n_heads, 2 * config.d_tri, config.d_embed))
         self.W_v = nn.Parameter(torch.zeros(config.n_heads, config.d_tri, config.d_embed))
-        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_tri, bias=False)
+        self.W_o = nn.Linear(config.n_heads * config.d_embed, 2 * config.d_tri, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         

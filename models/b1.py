@@ -30,9 +30,9 @@ class Attention(nn.Module):
         if v is None:
             v = q
         
-        q = q.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_embed) # (B, S, n_heads, d_embed)
-        k = k.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_embed)
-        v = v.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_embed)
+        q = q.unsqueeze(2).expand(B, S, self.config.n_heads, 2 * self.config.d_tri) # (B, S, n_heads, d_embed)
+        k = k.unsqueeze(2).expand(B, S, self.config.n_heads, 2 * self.config.d_tri)
+        v = v.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_tri)
             
         q = torch.einsum('b s h e, h e d -> b s h d', q, self.W_q) # (B, S, n_heads, d_embed)
         k = torch.einsum('b s h e, h e d -> b s h d', k, self.W_k)
@@ -55,7 +55,7 @@ class Attention(nn.Module):
         
         attn_output = torch.matmul(attn_probs, v)
         attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.config.d_embed * self.config.n_heads)
-        attn_output = self.W_o(attn_output)
+        # attn_output = self.W_o(attn_output)
         attn_output = self.drop_resid(attn_output)
         
         return attn_output
