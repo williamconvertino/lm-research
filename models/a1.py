@@ -10,14 +10,14 @@ class Attention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Linear(config.d_embed, config.d_embed, bias=False)
-        self.W_k = nn.Linear(config.d_embed, config.d_embed, bias=False)
-        self.W_v = nn.Linear(config.d_embed, config.d_embed, bias=False)
-        self.W_o = nn.Linear(config.d_embed, config.d_embed, bias=False)
+        self.W_q = nn.Parameter(torch.zeros(config.n_heads, config.d_embed, config.d_embed))
+        self.W_k = nn.Parameter(torch.zeros(config.n_heads, config.d_embed, config.d_embed))
+        self.W_v = nn.Parameter(torch.zeros(config.n_heads, config.d_embed, config.d_embed))
+        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
-        self.rotary_embeddings = RotaryPositionalEmbeddings(config.d_embed // config.n_heads)
+        self.rotary_embeddings = RotaryPositionalEmbeddings(config.d_embed)
         
         self.drop_attn = nn.Dropout(0.1)
         self.drop_resid = nn.Dropout(0.1)
@@ -30,21 +30,21 @@ class Attention(nn.Module):
             k = q
         if v is None:
             v = q
+        
+        q = q.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_embed) # (B, S, n_heads, d_embed)
+        k = k.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_embed)
+        v = v.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_embed)
             
-        q = self.W_q(q) # (B, S, d_embed)
-        k = self.W_k(k)
-        v = self.W_v(v)
+        q = torch.einsum('b s h e, h e d -> b s h d', q, self.W_q) # (B, S, n_heads, d_embed)
+        k = torch.einsum('b s h e, h e d -> b s h d', k, self.W_k)
+        v = torch.einsum('b s h e, h e d -> b s h d', v, self.W_v)
         
-        q = q.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
-        k = k.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
-        v = v.view(B, S, self.config.n_heads, self.config.d_embed // self.config.n_heads) # (B, S, n_heads, d_embed // n_heads)
-        
-        q = self.rotary_embeddings(q)
+        q = self.rotary_embeddings(q) # (B, S, n_heads, d_embed)
         k = self.rotary_embeddings(k)
         
-        q = q.transpose(1, 2) # (B, n_heads, S, d_embed // n_heads)
-        k = k.transpose(1, 2) # (B, n_heads, S, d_embed // n_heads)
-        v = v.transpose(1, 2) # (B, n_heads, S, d_embed // n_heads)
+        q = q.transpose(1, 2) # (B, n_heads, S, d_embed)
+        k = k.transpose(1, 2)
+        v = v.transpose(1, 2)
         
         causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().to(q.device)
         
@@ -55,7 +55,7 @@ class Attention(nn.Module):
         attn_probs = self.drop_attn(attn_probs)
         
         attn_output = torch.matmul(attn_probs, v)
-        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.config.d_embed)
+        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.config.d_embed * self.config.n_heads)
         attn_output = self.W_o(attn_output)
         attn_output = self.drop_resid(attn_output)
         
