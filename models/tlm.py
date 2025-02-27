@@ -88,10 +88,8 @@ class TransformerBlock(nn.Module):
         self.ln_2 = nn.LayerNorm(config.d_embed)
         
     def forward(self, x):
-        x = self.ln_1(x)
-        x = x + self.attention(x)
-        x = self.ln_2(x)
-        x = x + self.feed_forward(x)
+        x = x + self.attention(self.ln_1(x))
+        x = x + self.feed_forward(self.ln_2(x))
         return x
 
 class TLM(nn.Module):

@@ -87,24 +87,24 @@ class TransformerBlock(nn.Module):
         self.ln_1 = nn.LayerNorm(config.d_embed)
         self.ln_2 = nn.LayerNorm(config.d_embed)
         
-    def forward(self, x):
-        x = x + self.attention(self.ln_1(x))
-        x = x + self.feed_forward(self.ln_2(x))
+    def forward(self, x, ex, f):
+        
         return x
 
 class A1(nn.Module):
     def __init__(self, config):
         super().__init__()
         
+        config.d_triple = config.d_embed // 3
         self.config = config
         
-        self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
+        self.embedding = nn.Embedding(config.vocab_size, config.d_triple)
 
         self.transformer_blocks = nn.Sequential(*[TransformerBlock(config) for _ in range(config.n_layers)])
         
-        self.ln_f = nn.LayerNorm(config.d_embed)
+        self.ln_f = nn.LayerNorm(config.d_triple)
 
-        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.d_triple, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
@@ -129,10 +129,14 @@ class A1(nn.Module):
             self.embedding.weight -= self.embedding.weight.mean(0, keepdim=True) # Zero mean
 
         x = self.embedding(x)
-        x = self.transformer_blocks(x)
-        x = self.ln_f(x)
+        ex = x
+        f = torch.zeros_like(x)
         
-        logits = self.lm_head(x)
+        x, ex, f = self.transformer_blocks(x, ex, f)
+        
+        f = self.ln_f(f)
+        
+        logits = self.lm_head(f)
         
         if targets is None:
             return logits, None
