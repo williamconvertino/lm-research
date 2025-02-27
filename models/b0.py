@@ -102,7 +102,7 @@ class B0(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_tri)
 
-        self.transformer_blocks = nn.Sequential(*[TransformerBlock(config) for _ in range(config.n_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
         self.ff_out = FeedForward(config)
         self.ln_f = nn.LayerNorm(config.d_tri)
@@ -135,7 +135,8 @@ class B0(nn.Module):
         
         f_plus = torch.cat([ex, torch.zeros_like(ex)], dim=-1) # Combined f and covariate terms
         
-        ex, f_plus = self.transformer_blocks(ex, f_plus)
+        for block in self.transformer_blocks:
+            ex, f_plus = block(ex, f_plus)
         
         f = self.ff_out(f_plus)
         
