@@ -39,6 +39,9 @@ class Attention(nn.Module):
         k = torch.einsum('b s h e, h e d -> b s h d', k, self.W_k)
         v = torch.einsum('b s h e, h e d -> b s h d', v, self.W_v)
         
+        
+        print(q.shape)
+        
         q = self.rotary_embeddings(q) # (B, S, n_heads, d_embed)
         k = self.rotary_embeddings(k)
         
