@@ -97,17 +97,17 @@ class B0(nn.Module):
     def __init__(self, config):
         super().__init__()
         
-        config.d_triple = config.d_embed // 3
+        config.d_tri = config.d_embed // 3
         self.config = config
         
-        self.embedding = nn.Embedding(config.vocab_size, config.d_triple)
+        self.embedding = nn.Embedding(config.vocab_size, config.d_tri)
 
         self.transformer_blocks = nn.Sequential(*[TransformerBlock(config) for _ in range(config.n_layers)])
         
         self.ff_out = FeedForward(config)
-        self.ln_f = nn.LayerNorm(config.d_triple)
+        self.ln_f = nn.LayerNorm(config.d_tri)
 
-        self.lm_head = nn.Linear(config.d_triple, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.d_tri, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
