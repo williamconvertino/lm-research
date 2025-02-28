@@ -94,7 +94,7 @@ class TransformerBlock(nn.Module):
         
         f_plus = f_plus + self.attention(q=q, k=k, v=v)        
         
-        ex = ex + self.feed_forward(self.ln_2(f_plus))
+        ex = self.feed_forward(self.ln_2(f_plus))
         
         return ex, f_plus
 
