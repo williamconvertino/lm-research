@@ -31,8 +31,8 @@ class Attention(nn.Module):
         if v is None:
             v = q
         
-        q = q.unsqueeze(2).expand(B, S, self.config.n_heads, 2 * self.config.d_tri) # (B, S, n_heads, d_embed)
-        k = k.unsqueeze(2).expand(B, S, self.config.n_heads, 2 * self.config.d_tri)
+        q = q.unsqueeze(2).expand(B, S, self.config.n_heads, 3 * self.config.d_tri) # (B, S, n_heads, d_embed)
+        k = k.unsqueeze(2).expand(B, S, self.config.n_heads, 3 * self.config.d_tri)
         v = v.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_tri)
             
         q = torch.einsum('b s h e, h e d -> b s h d', q, self.W_q) # (B, S, n_heads, d_embed)
