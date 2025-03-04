@@ -40,7 +40,7 @@ def main():
     parser.add_argument("--train", type=str)
     parser.add_argument("--eval", type=str, nargs="+")
     parser.add_argument("--dataset", type=str, default="tiny_stories")
-    parser.add_argument("--wait", type=bool, default=False)
+    parser.add_argument("--wait", action="store_true")
     args = parser.parse_args()
 
     assert args.train or args.eval, "Must specify either training or evaluation"
