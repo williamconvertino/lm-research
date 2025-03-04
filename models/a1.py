@@ -68,7 +68,7 @@ class FeedForward(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.fc_1 = nn.Linear(config.d_tri, 4 * config.d_embed)
+        self.fc_1 = nn.Linear(2 * config.d_tri, 4 * config.d_embed)
         self.fc_2 = nn.Linear(4 * config.d_embed, config.d_tri)
         
         self.activation = nn.GELU()    
