@@ -1,8 +1,0 @@
-{
-    "model": "b2",
-    "max_seq_len": 128,
-    "d_embed": 180,
-    "n_layers": 3,
-    "n_heads": 6,
-    "dropout": 0.1
-}

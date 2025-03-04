@@ -10,10 +10,10 @@ class Attention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Parameter(torch.zeros(config.n_heads, config.d_embed, config.d_embed))
-        self.W_k = nn.Parameter(torch.zeros(config.n_heads, config.d_embed, config.d_embed))
-        self.W_v = nn.Parameter(torch.zeros(config.n_heads, config.d_embed, config.d_embed))
-        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed, bias=False)
+        self.W_q = nn.Parameter(torch.zeros(config.n_heads, config.d_tri, config.d_embed))
+        self.W_k = nn.Parameter(torch.zeros(config.n_heads, config.d_tri, config.d_embed))
+        # self.W_v = nn.Parameter(torch.zeros(config.n_heads, config.d_tri, config.d_tri))
+        self.W_v_diag = nn.Parameter(torch.zeros(config.n_heads, config.d_tri))
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -31,13 +31,14 @@ class Attention(nn.Module):
         if v is None:
             v = q
         
-        q = q.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_embed) # (B, S, n_heads, d_embed)
-        k = k.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_embed)
-        v = v.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_embed)
+        q = q.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_tri) # (B, S, n_heads, d_embed)
+        k = k.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_tri)
+        v = v.unsqueeze(2).expand(B, S, self.config.n_heads, self.config.d_tri)
             
         q = torch.einsum('b s h e, h e d -> b s h d', q, self.W_q) # (B, S, n_heads, d_embed)
         k = torch.einsum('b s h e, h e d -> b s h d', k, self.W_k)
-        v = torch.einsum('b s h e, h e d -> b s h d', v, self.W_v)
+        W_v = torch.diag_embed(self.W_v_diag)  # (n_heads, d_tri, d_tri)
+        v = torch.einsum('b s h e, h e d -> b s h d', v, W_v)
         
         q = self.rotary_embeddings(q) # (B, S, n_heads, d_embed)
         k = self.rotary_embeddings(k)
@@ -55,8 +56,10 @@ class Attention(nn.Module):
         attn_probs = self.drop_attn(attn_probs)
         
         attn_output = torch.matmul(attn_probs, v)
-        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.config.d_embed * self.config.n_heads)
-        attn_output = self.W_o(attn_output)
+        attn_output = attn_output.transpose(1, 2) # (B, S, n_heads, d_embed)
+        
+        attn_output = torch.sum(attn_output, dim=2) # (B, S, d_embed)
+        
         attn_output = self.drop_resid(attn_output)
         
         return attn_output
@@ -65,8 +68,8 @@ class FeedForward(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.fc_1 = nn.Linear(config.d_embed, 4 * config.d_embed)
-        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed)
+        self.fc_1 = nn.Linear(config.d_tri, 4 * config.d_embed)
+        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_tri)
         
         self.activation = nn.GELU()    
         self.drop = nn.Dropout(0.1)
@@ -84,27 +87,32 @@ class TransformerBlock(nn.Module):
         
         self.attention = Attention(config)
         self.feed_forward = FeedForward(config)
-        self.ln_1 = nn.LayerNorm(config.d_embed)
-        self.ln_2 = nn.LayerNorm(config.d_embed)
+        self.ln_1 = nn.LayerNorm(2 * config.d_tri)
+        self.ln_2 = nn.LayerNorm(2 * config.d_tri)
         
-    def forward(self, x):
-        x = x + self.attention(self.ln_1(x))
-        x = x + self.feed_forward(self.ln_2(x))
-        return x
+    def forward(self, e, ex, f):
+        
+        f = f + self.attention(q=e, k=e, v=ex)
+        
+        ex = e + self.feed_forward(self.ln_2(torch.cat([e, f], dim=-1)))
+        
+        return e, ex, f
 
 class A1(nn.Module):
     def __init__(self, config):
         super().__init__()
         
+        config.d_tri = config.d_embed // 3
         self.config = config
         
-        self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
+        self.embedding = nn.Embedding(config.vocab_size, config.d_tri)
 
-        self.transformer_blocks = nn.Sequential(*[TransformerBlock(config) for _ in range(config.n_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
-        self.ln_f = nn.LayerNorm(config.d_embed)
+        self.ff_out = FeedForward(config)
+        self.ln_f = nn.LayerNorm(config.d_tri)
 
-        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.d_tri, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
@@ -128,11 +136,18 @@ class A1(nn.Module):
         with torch.no_grad():
             self.embedding.weight -= self.embedding.weight.mean(0, keepdim=True) # Zero mean
 
-        x = self.embedding(x)
-        x = self.transformer_blocks(x)
-        x = self.ln_f(x)
+        e = self.embedding(x) # Start with E[W_c] = 0
+        ex = e
+        f = torch.zeros_like(ex)
         
-        logits = self.lm_head(x)
+        for block in self.transformer_blocks:
+            e, ex, f = block(e, ex, f)
+        
+        f = self.ff_out(torch.cat([e, f], dim=-1))
+        
+        f = self.ln_f(f)
+        
+        logits = self.lm_head(f)
         
         if targets is None:
             return logits, None
