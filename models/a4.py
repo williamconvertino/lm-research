@@ -15,6 +15,7 @@ class Attention(nn.Module):
         # self.W_v = nn.Parameter(torch.zeros(config.n_heads, config.d_tri, config.d_tri))
         # self.W_v_diag = nn.Parameter(torch.zeros(config.n_heads, config.d_tri))
         self.W_v = nn.Parameter(torch.zeros(config.n_heads, config.d_tri, config.d_tri))
+        # self.P = nn.Linear(config.n_heads * 2 * config.d_tri, 2 * config.d_tri)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -42,7 +43,7 @@ class Attention(nn.Module):
         # v = torch.einsum('b s h e, h e d -> b s h d', v, W_v)
         v = torch.einsum('b s h e, h e d -> b s h d', v, self.W_v)
                 
-        v = torch.cat([v, v], dim=-1)
+        v = torch.cat([v, torch.zeros_like(v)], dim=-1)
         
         q = self.rotary_embeddings(q) # (B, S, n_heads, d_embed)
         k = self.rotary_embeddings(k)
