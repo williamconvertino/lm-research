@@ -149,7 +149,7 @@ class A4(nn.Module):
         for block in self.transformer_blocks:
             ex, f = block(ex, f)
         
-        f = self.ff_out(f, dim=-1)
+        f = self.ff_out(f)
         
         f = self.ln_f(f)
         
