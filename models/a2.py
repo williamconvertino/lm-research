@@ -100,7 +100,7 @@ class TransformerBlock(nn.Module):
         
         return e, ex, f
 
-class A1(nn.Module):
+class A2(nn.Module):
     def __init__(self, config):
         super().__init__()
         
