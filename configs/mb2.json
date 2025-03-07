@@ -1,0 +1,8 @@
+{
+    "model": "mb2",
+    "max_seq_len": 128,
+    "d_embed": 500,
+    "n_layers": 2,
+    "n_heads": 5,
+    "dropout": 0.1
+}
