@@ -78,7 +78,7 @@ class DivBlock(nn.Module):
         super().__init__()
         
         self.attention = Attention(config, d_qk=config.d_div, d_v=config.d_div)
-        self.feed_forward = FeedForward(config)
+        self.feed_forward = FeedForward(config.d_div)
         self.ln_f = nn.LayerNorm(config.d_div)
         self.ln_g = nn.LayerNorm(config.d_div)
         self.ln_ff = nn.LayerNorm(config.d_div)
