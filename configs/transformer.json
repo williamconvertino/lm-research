@@ -1,7 +1,7 @@
 {
     "model": "transformer",
-    "max_seq_len": 200,
-    "d_embed": 480,
+    "max_seq_len": 128,
+    "d_embed": 400,
     "n_layers": 2,
     "n_heads": 4,
     "dropout": 0.1
