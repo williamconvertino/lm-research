@@ -79,8 +79,8 @@ class TransformerBlock(nn.Module):
         
         self.attention = Attention(config, d_qk=config.d_embed, d_v=config.d_embed)
         self.feed_forward = FeedForward(config.d_embed, config.d_embed, config.d_div)
-        self.ln_1 = nn.LayerNorm(config.d_div)
-        self.ln_2 = nn.LayerNorm(config.d_div)
+        self.ln_1 = nn.LayerNorm(config.d_embed)
+        self.ln_2 = nn.LayerNorm(config.d_embed)
         
     def forward(self, x):
         x = x + self.attention(self.ln_1(x))
