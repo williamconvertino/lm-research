@@ -151,7 +151,7 @@ class Mixbig(nn.Module):
         
         for transformer_block in self.transformer_blocks:
             x = transformer_block(x)
-        x = x[:, :self.config.d_div]
+        x = x[:, :, :self.config.d_div]
         x = self.ln_f(x)
         
         logits = self.lm_head(x)
