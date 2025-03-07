@@ -34,9 +34,9 @@ class Attention(nn.Module):
         if v is None:
             v = q
         
-        q = self.W_q(q).view(B, S, self.config.n_heads, self.d_qk).transpose(1, 2)
-        k = self.W_k(k).view(B, S, self.config.n_heads, self.d_qk).transpose(1, 2)
-        v = self.W_v(v).view(B, S, self.config.n_heads, self.d_v).transpose(1, 2)
+        q = self.W_q(q).view(B, S, self.config.n_heads, self.config.d_embed).transpose(1, 2)
+        k = self.W_k(k).view(B, S, self.config.n_heads, self.config.d_embed).transpose(1, 2)
+        v = self.W_v(v).view(B, S, self.config.n_heads, self.config.d_embed).transpose(1, 2)
         
         q = self.rotary_embeddings(q)
         k = self.rotary_embeddings(k)
