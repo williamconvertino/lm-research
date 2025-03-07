@@ -106,7 +106,7 @@ class DivBlock(nn.Module):
         
         return f, g
         
-class Mixed(nn.Module):
+class Mixbig(nn.Module):
     def __init__(self, config):
         super().__init__()
         
