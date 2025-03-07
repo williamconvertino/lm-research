@@ -78,7 +78,7 @@ class TransformerBlock(nn.Module):
         super().__init__()
         
         self.attention = Attention(config, d_qk=config.d_embed, d_v=config.d_embed)
-        self.feed_forward = FeedForward(config.d_embed, config.d_embed, config.d_div)
+        self.feed_forward = FeedForward(config.d_embed, config.d_embed, config.d_embed)
         self.ln_1 = nn.LayerNorm(config.d_embed)
         self.ln_2 = nn.LayerNorm(config.d_embed)
         
@@ -151,7 +151,7 @@ class Mixbig(nn.Module):
         
         for transformer_block in self.transformer_blocks:
             x = transformer_block(x)
-        
+        x = x[:, :self.config.d_div]
         x = self.ln_f(x)
         
         logits = self.lm_head(x)
