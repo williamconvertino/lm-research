@@ -5,15 +5,18 @@ import torch.nn.functional as F
 from torchtune.modules import RotaryPositionalEmbeddings
 
 class Attention(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, d_qk=None, d_v=None):
         super().__init__()
         
         self.config = config
         
-        self.W_q = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_k = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_v = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed, bias=False)
+        self.d_qk = d_qk if d_qk is not None else config.d_embed
+        self.d_v = d_v if d_v is not None else config.d_embed
+        
+        self.W_q = nn.Linear(self.d_qk, config.n_heads * config.d_embed, bias=False)
+        self.W_k = nn.Linear(self.d_qk, config.n_heads * config.d_embed, bias=False)
+        self.W_v = nn.Linear(self.d_v, config.n_heads * config.d_embed, bias=False)
+        self.W_o = nn.Linear(config.n_heads * config.d_embed, self.d_v, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -31,9 +34,9 @@ class Attention(nn.Module):
         if v is None:
             v = q
         
-        q = self.W_q(q).view(B, S, self.config.n_heads, self.config.d_embed).transpose(1, 2)
-        k = self.W_k(k).view(B, S, self.config.n_heads, self.config.d_embed).transpose(1, 2)
-        v = self.W_v(v).view(B, S, self.config.n_heads, self.config.d_embed).transpose(1, 2)
+        q = self.W_q(q).view(B, S, self.config.n_heads, self.d_qk).transpose(1, 2)
+        k = self.W_k(k).view(B, S, self.config.n_heads, self.d_qk).transpose(1, 2)
+        v = self.W_v(v).view(B, S, self.config.n_heads, self.d_v).transpose(1, 2)
         
         q = self.rotary_embeddings(q)
         k = self.rotary_embeddings(k)
@@ -54,11 +57,11 @@ class Attention(nn.Module):
         return attn_output
         
 class FeedForward(nn.Module):
-    def __init__(self, config):
+    def __init__(self, d_embed):
         super().__init__()
 
-        self.fc_1 = nn.Linear(config.d_embed, 4 * config.d_embed)
-        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed)
+        self.fc_1 = nn.Linear(d_embed, 4 * d_embed)
+        self.fc_2 = nn.Linear(4 * d_embed, d_embed)
         
         self.activation = nn.GELU()    
         self.drop = nn.Dropout(0.1)
@@ -70,33 +73,39 @@ class FeedForward(nn.Module):
         x = self.fc_2(x)
         return x
 
-class TransformerBlock(nn.Module):
+class DivBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         
-        self.attention = Attention(config)
+        self.attention = Attention(config, d_qk=config.d_div, d_v=config.d_div)
         self.feed_forward = FeedForward(config)
-        self.ln_1 = nn.LayerNorm(config.d_embed)
-        self.ln_2 = nn.LayerNorm(config.d_embed)
+        self.ln_f = nn.LayerNorm(config.d_div)
+        self.ln_g = nn.LayerNorm(config.d_div)
+        self.ln_ff = nn.LayerNorm(config.d_div)
         
-    def forward(self, x):
-        x = x + self.attention(self.ln_1(x))
-        x = x + self.feed_forward(self.ln_2(x))
-        return x
-
-class Divm(nn.Module):
+    def forward(self, f, g):
+        q = k = self.ln_g(g)
+        v = self.ln_f(f)
+        f = f + self.attention(q=q, k=k, v=v)
+        
+        g = g + self.feed_forward(self.ln_ff(f))
+        
+        return f, g
+        
+class Div(nn.Module):
     def __init__(self, config):
         super().__init__()
         
         self.config = config
+        self.config.d_div = config.d_embed // 2
         
-        self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
+        self.embedding = nn.Embedding(config.vocab_size, config.d_div)
 
-        self.transformer_blocks = nn.Sequential(*[TransformerBlock(config) for _ in range(config.n_layers)])
+        self.div_blocks = nn.ModuleList([DivBlock(config) for _ in range(config.n_layers)])
         
-        self.ln_f = nn.LayerNorm(config.d_embed)
+        self.ln_f = nn.LayerNorm(config.d_div)
 
-        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.d_div, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
@@ -117,11 +126,15 @@ class Divm(nn.Module):
         
         B, S = x.shape
 
-        x = self.embedding(x)
-        x = self.transformer_blocks(x)
-        x = self.ln_f(x)
+        f = self.embedding(x)
+        g = f
         
-        logits = self.lm_head(x)
+        for div_block in self.div_blocks:
+            f, g = div_block(f, g)
+        
+        f = self.ln_f(f)
+        
+        logits = self.lm_head(f)
         
         if targets is None:
             return logits, None

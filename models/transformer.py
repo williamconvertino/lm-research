@@ -92,7 +92,7 @@ class Transformer(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
 
-        self.transformer_blocks = nn.Sequential(*[TransformerBlock(config) for _ in range(config.n_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
         self.ln_f = nn.LayerNorm(config.d_embed)
 
@@ -118,7 +118,10 @@ class Transformer(nn.Module):
         B, S = x.shape
 
         x = self.embedding(x)
-        x = self.transformer_blocks(x)
+        
+        for transformer_block in self.transformer_blocks:
+            x = transformer_block(x)
+        
         x = self.ln_f(x)
         
         logits = self.lm_head(x)
