@@ -1,5 +1,5 @@
 {
-    "model": "a4",
+    "model": "transformer",
     "max_seq_len": 200,
     "d_embed": 480,
     "n_layers": 2,
