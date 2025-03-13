@@ -28,7 +28,6 @@ class BookCorpusDataset(DiskDataset):
             DiskDataset.generate_data_file(train_dataset, f"{DATASET_DIR}/bookcorpus/train.bin", tokenizer, separate_lines=False)
             DiskDataset.generate_data_file(test_dataset, f"{DATASET_DIR}/bookcorpus/test.bin", tokenizer, separate_lines=False)
             DiskDataset.generate_data_file(val_dataset, f"{DATASET_DIR}/bookcorpus/val.bin", tokenizer, separate_lines=False)
-                                           
     
         super().__init__(file_path, tokenizer, context_size, do_shuffle=do_shuffle, allow_overlap=allow_overlap)
 
