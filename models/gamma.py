@@ -149,7 +149,7 @@ class Gamma(nn.Module):
         x = torch.cat([f, g], dim=-1)
         
         x = self.transformer_block(x)
-        x = x[:, :, :self.config.d_div]
+        x = x[:, :, :self.config.d_embed // 2]
         
         x = self.ln_f(x)
         
