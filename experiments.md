@@ -1,8 +1,8 @@
-Transformer
-Alpha [Div, g into final layer]
-Beta [Div, g into final, zero erasure]
-Gamma [Div, f and g into final]
-Delta [No div, but reduced embedding dimension]
+Transformer ()
+Alpha [Div, g into final layer] ()
+Beta [Div, g into final, zero erasure] ()
+Gamma [Div, f and g into final] ()
+Delta [No div, but reduced embedding dimension] ()
 
-Transformer_mini
-Alpha_mini
+Transformer_deep ()
+Alpha_deep ()
