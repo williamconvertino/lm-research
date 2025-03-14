@@ -5,18 +5,15 @@ import torch.nn.functional as F
 from torchtune.modules import RotaryPositionalEmbeddings
 
 class Attention(nn.Module):
-    def __init__(self, config, d_qk=None, d_v=None):
+    def __init__(self, config):
         super().__init__()
         
         self.config = config
         
-        self.d_qk = d_qk if d_qk is not None else config.d_embed
-        self.d_v = d_v if d_v is not None else config.d_embed
-        
-        self.W_q = nn.Linear(self.d_qk, config.n_heads * config.d_embed, bias=False)
-        self.W_k = nn.Linear(self.d_qk, config.n_heads * config.d_embed, bias=False)
-        self.W_v = nn.Linear(self.d_v, config.n_heads * config.d_embed, bias=False)
-        self.W_o = nn.Linear(config.n_heads * config.d_embed, self.d_v, bias=False)
+        self.W_q = nn.Linear(config.d_div, config.n_heads * config.d_embed, bias=False)
+        self.W_k = nn.Linear(config.d_div, config.n_heads * config.d_embed, bias=False)
+        self.W_v = nn.Linear(config.d_div, config.n_heads * config.d_embed, bias=False)
+        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_div, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -57,11 +54,11 @@ class Attention(nn.Module):
         return attn_output
         
 class FeedForward(nn.Module):
-    def __init__(self, d_embed):
+    def __init__(self, config):
         super().__init__()
 
-        self.fc_1 = nn.Linear(d_embed, 4 * d_embed)
-        self.fc_2 = nn.Linear(4 * d_embed, d_embed)
+        self.fc_1 = nn.Linear(config.d_div, 4 * config.d_embed)
+        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_div)
         
         self.activation = nn.GELU()    
         self.drop = nn.Dropout(0.1)
@@ -72,27 +69,43 @@ class FeedForward(nn.Module):
         x = self.drop(x)
         x = self.fc_2(x)
         return x
+    
+class TransformerBlock(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        
+        self.attention = Attention(config)
+        self.feed_forward = FeedForward(config)
+        self.ln_1 = nn.LayerNorm(config.d_div)
+        self.ln_2 = nn.LayerNorm(config.d_div)
+        
+    def forward(self, x):
+        x = x + self.attention(self.ln_1(x))
+        x = x + self.feed_forward(self.ln_2(x))
+        return x
 
 class DivBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         
-        self.attention = Attention(config, d_qk=config.d_div, d_v=config.d_div)
-        self.feed_forward = FeedForward(config.d_div)
+        self.attention = Attention(config)
+        self.feed_forward = FeedForward(config)
         self.ln_f = nn.LayerNorm(config.d_div)
         self.ln_g = nn.LayerNorm(config.d_div)
         self.ln_ff = nn.LayerNorm(config.d_div)
         
     def forward(self, f, g):
+        
         q = k = self.ln_g(g)
         v = self.ln_f(f)
+        
         f = f + self.attention(q=q, k=k, v=v)
         
-        g = g + self.feed_forward(self.ln_ff(f))
+        g = self.feed_forward(self.ln_ff(f))
         
         return f, g
         
-class Div(nn.Module):
+class Beta(nn.Module):
     def __init__(self, config):
         super().__init__()
         
@@ -101,7 +114,8 @@ class Div(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_div)
 
-        self.div_blocks = nn.ModuleList([DivBlock(config) for _ in range(config.n_layers)])
+        self.div_blocks = nn.ModuleList([DivBlock(config) for _ in range(config.n_layers - 1)])
+        self.transformer_block = TransformerBlock(config)
         
         self.ln_f = nn.LayerNorm(config.d_div)
 
@@ -132,9 +146,11 @@ class Div(nn.Module):
         for div_block in self.div_blocks:
             f, g = div_block(f, g)
         
-        f = self.ln_f(f)
+        x = self.transformer_block(g)
         
-        logits = self.lm_head(f)
+        x = self.ln_f(x)
+        
+        logits = self.lm_head(x)
         
         if targets is None:
             return logits, None

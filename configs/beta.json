@@ -1,5 +1,5 @@
 {
-    "model": "mixbig",
+    "model": "beta",
     "max_seq_len": 128,
     "d_embed": 400,
     "n_layers": 3,
