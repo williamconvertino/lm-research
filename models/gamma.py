@@ -105,7 +105,7 @@ class DivBlock(nn.Module):
         
         return f, g
         
-class Alpha(nn.Module):
+class Gamma(nn.Module):
     def __init__(self, config):
         super().__init__()
         
