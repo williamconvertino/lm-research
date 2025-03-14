@@ -93,7 +93,7 @@ class Delta(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_div)
 
-        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_blocks)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
         self.ln_f = nn.LayerNorm(config.d_div)
 
