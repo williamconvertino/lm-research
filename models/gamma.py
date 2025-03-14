@@ -117,9 +117,9 @@ class Gamma(nn.Module):
         self.div_blocks = nn.ModuleList([DivBlock(config) for _ in range(config.n_layers - 1)])
         self.transformer_block = TransformerBlock(config)
         
-        self.ln_f = nn.LayerNorm(config.d_div)
+        self.ln_f = nn.LayerNorm(config.d_embed // 2)
 
-        self.lm_head = nn.Linear(config.d_div, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.d_embed // 2, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
