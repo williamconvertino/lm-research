@@ -71,7 +71,7 @@ def main():
         assert checkpoint is not None, "No checkpoint found for model, cannot evaluate"
         model.load_state_dict(checkpoint["model_state_dict"])
         
-        eval_flags = args.eval[1:] if len(args.eval) > 1 else ["loss", "greedy", "beam", "topk", "nucleus"]
+        eval_flags = args.eval[1:] if len(args.eval) > 1 else ["loss", "nucleus"]
         evaluator = Evaluator(model, splits, tokenizer)
         if "loss" in eval_flags:
             evaluator.eval_loss()

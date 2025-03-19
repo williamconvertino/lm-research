@@ -1,8 +1,9 @@
 {
-    "model": "gamma",
+    "model": "sstransformer",
     "max_seq_len": 128,
     "d_embed": 400,
     "n_layers": 3,
     "n_heads": 4,
-    "dropout": 0.1
+    "dropout": 0.1,
+    "ss_pct": 0.7
 }
