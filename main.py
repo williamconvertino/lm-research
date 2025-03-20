@@ -75,7 +75,8 @@ def main():
         evaluator = Evaluator(model, splits, tokenizer)
         if "loss" in eval_flags:
             evaluator.eval_loss()
-        evaluator.eval(eval_flags)
+        if any(flag in ["greedy", "beam", "topk", "nucleus"] for flag in eval_flags):
+            evaluator.eval(eval_flags)
 
 if __name__ == "__main__":
     main()
