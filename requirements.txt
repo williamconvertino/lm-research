@@ -6,3 +6,5 @@ datasets
 transformers
 tiktoken
 python-dotenv
+requests
+zipfile
