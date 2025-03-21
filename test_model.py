@@ -2,7 +2,7 @@ from models.tttransformer import TTTransformer
 from types import SimpleNamespace
 
 config = {
-    "model": "sstransformer",
+    "model": "tttransformer",
     "max_seq_len": 128,
     "d_embed": 512,
     "n_layers": 3,
@@ -15,4 +15,10 @@ config = {
 config = SimpleNamespace(**config)
 
 model = TTTransformer(config)
-print(model.embedding.weight.shape)
+
+total_params = sum(p.numel() for p in model.parameters())
+embed_params = sum(p.numel() for p in model.embedding.parameters())
+non_embed_params = total_params - embed_params
+
+print(f"Total parameters: {total_params}")
+print(f"Parameters without embedding: {non_embed_params}")
