@@ -1,4 +1,4 @@
-from models.sstransformer import SSTransformer
+from models.tttransformer import TTTransformer
 from types import SimpleNamespace
 
 config = {
@@ -14,4 +14,5 @@ config = {
 
 config = SimpleNamespace(**config)
 
-model = SSTransformer(config)
+model = TTTransformer(config)
+print(model.embedding.weight.shape)

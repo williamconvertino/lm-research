@@ -94,8 +94,6 @@ class SSTransformer(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_embed - config.ss)
         
-        print(self.embedding.weight.shape)
-        
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
         self.ln_f = nn.LayerNorm(config.d_embed - config.ss)

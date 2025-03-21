@@ -88,7 +88,7 @@ class TTTransformer(nn.Module):
     def __init__(self, config):
         super().__init__()
         
-        config.d_embed = int(config.d_embed * config.ss_pct)
+        config.d_embed = config.d_embed - int(config.d_embed * config.ss_pct)
         if config.d_embed % 2 != 0:
             config.d_embed += 1
         
