@@ -1,0 +1,17 @@
+from models.sstransformer import SSTransformer
+from types import SimpleNamespace
+
+config = {
+    "model": "sstransformer",
+    "max_seq_len": 128,
+    "d_embed": 512,
+    "n_layers": 3,
+    "n_heads": 8,
+    "dropout": 0.1,
+    "ss_pct": 0.99,
+    "vocab_size": 50257
+}
+
+config = SimpleNamespace(**config)
+
+model = SSTransformer(config)

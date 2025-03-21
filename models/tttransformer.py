@@ -84,23 +84,21 @@ class TransformerBlock(nn.Module):
         x = x + self.feed_forward(self.ln_2(x))
         return x
 
-class SSTransformer(nn.Module):
+class TTTransformer(nn.Module):
     def __init__(self, config):
         super().__init__()
         
-        config.ss = int(config.d_embed * config.ss_pct)
+        config.d_embed = int(config.d_embed * config.ss_pct)
         
         self.config = config
         
-        self.embedding = nn.Embedding(config.vocab_size, config.d_embed - config.ss)
-        
-        print(self.embedding.weight.shape)
-        
+        self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
+
         self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
-        self.ln_f = nn.LayerNorm(config.d_embed - config.ss)
+        self.ln_f = nn.LayerNorm(config.d_embed)
 
-        self.lm_head = nn.Linear(config.d_embed - config.ss, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
@@ -122,12 +120,10 @@ class SSTransformer(nn.Module):
         B, S = x.shape
 
         x = self.embedding(x)
-        x = torch.cat((x, torch.zeros(B, S, self.config.ss).to(x.device)), dim=-1)
         
         for transformer_block in self.transformer_blocks:
             x = transformer_block(x)
         
-        x = x[:, :, :-self.config.ss]
         x = self.ln_f(x)
         
         logits = self.lm_head(x)
