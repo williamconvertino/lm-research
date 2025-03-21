@@ -89,6 +89,8 @@ class TTTransformer(nn.Module):
         super().__init__()
         
         config.d_embed = int(config.d_embed * config.ss_pct)
+        if config.d_embed % 2 != 0:
+            config.d_embed += 1
         
         self.config = config
         
