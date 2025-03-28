@@ -92,8 +92,8 @@ class GBlock(nn.Module):
         self.attention = Attention(config)
         self.feed_forward = FeedForward(config)
         
-        self.ln_1 = nn.LayerNorm(config.d_embed // 2)
-        self.ln_2 = nn.LayerNorm(config.d_embed // 2)
+        self.ln_1 = nn.LayerNorm(config.d_embed)
+        self.ln_2 = nn.LayerNorm(config.d_embed)
         
     def forward(self, f, g):
         x = torch.cat([f, g], dim=-1)
