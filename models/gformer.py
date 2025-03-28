@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchtune.modules import RotaryPositionalEmbeddings
 
-
 class GAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -175,7 +174,7 @@ class GBlock(nn.Module):
         g = g + self.feed_forward(self.ln_2(x))
         return f, g
 
-class DivFormer(nn.Module):
+class GFormer(nn.Module):
     def __init__(self, config):
         super().__init__()
         
