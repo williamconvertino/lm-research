@@ -88,6 +88,7 @@ class GBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         
+        self.config = config
         self.attention = Attention(config)
         self.feed_forward = FeedForward(config)
         
@@ -97,9 +98,11 @@ class GBlock(nn.Module):
     def forward(self, f, g):
         x = torch.cat([f, g], dim=-1)
         
-        f = f + self.attention(self.ln_1(x))
+        f = f + self.attention(self.ln_1(x))[:, :, :self.config.d_embed // 2]
         
-        g = g + self.feed_forward(self.ln_2(f))
+        x = torch.cat([f, g], dim=-1)
+        
+        g = g + self.feed_forward(self.ln_2(x))[:, :, self.config.d_embed // 2:]
         return f, g
 
 class DivFormer(nn.Module):
@@ -141,6 +144,7 @@ class DivFormer(nn.Module):
         for g_block in self.g_blocks:
             f, g = g_block(f, g)
         
+        x = torch.cat([f, g], dim=-1)
         x = self.transformer_block(f)
         
         x = self.ln_f(x)
