@@ -14,7 +14,7 @@ class SlimPajamaDataset(DiskDataset):
 
             print(f"Creating SlimPajama [{split}] dataset files...")
             
-            dataset = load_dataset(HUGGINGFACE_PATH, cache_dir=f"{DATASET_DIR}/raw")["train"]
+            dataset = load_dataset(HUGGINGFACE_PATH, cache_dir=f"{DATASET_DIR}/raw")
             
             # train_test_splits = dataset.train_test_split(test_size=10000, shuffle=True, seed=42)
 
