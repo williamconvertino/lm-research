@@ -98,7 +98,7 @@ class GBlock(nn.Module):
         g = g + self.feed_forward(self.ln_2(f))
         return f, g
 
-class Transformer(nn.Module):
+class GFormer(nn.Module):
     def __init__(self, config):
         super().__init__()
         

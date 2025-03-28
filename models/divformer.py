@@ -84,6 +84,20 @@ class TransformerBlock(nn.Module):
         x = x + self.feed_forward(self.ln_2(x))
         return x
 
+class GBlock(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        
+        self.attention = Attention(config)
+        self.feed_forward = FeedForward(config)
+        self.ln_1 = nn.LayerNorm(config.d_embed)
+        self.ln_2 = nn.LayerNorm(config.d_embed)
+        
+    def forward(self, f, g):
+        f = f + self.attention(self.ln_1(f))
+        g = g + self.feed_forward(self.ln_2(f))
+        return f, g
+
 class Transformer(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -92,7 +106,8 @@ class Transformer(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
 
-        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
+        self.g_blocks = nn.ModuleList([GBlock(config) for _ in range(config.n_layers - 1)])
+        self.transformer_block = TransformerBlock(config)
         
         self.ln_f = nn.LayerNorm(config.d_embed)
 
@@ -117,10 +132,12 @@ class Transformer(nn.Module):
         
         B, S = x.shape
 
-        x = self.embedding(x)
+        f = g = self.embedding(x)
         
-        for transformer_block in self.transformer_blocks:
-            x = transformer_block(x)
+        for g_block in self.g_blocks:
+            f, g = g_block(f, g)
+        
+        x = self.transformer_block(f)
         
         x = self.ln_f(x)
         
