@@ -9,6 +9,7 @@ from dataset.tokenizer import Tokenizer
 from dataset.tinystories_dataset import TinyStoriesDataset
 from dataset.bookcorpus import BookCorpusDataset
 from dataset.slimpajama import SlimPajamaDataset
+from dataset.babylm import BabyLMDataset
 from util.loading import load_model, load_most_recent_checkpoint, load_config
 
 def wait_for_free_gpu(vram=13):
@@ -58,6 +59,8 @@ def main():
         splits = BookCorpusDataset.get_splits(tokenizer, config.max_seq_len)
     elif args.dataset == "slimpajama":
         splits = SlimPajamaDataset.get_splits(tokenizer, config.max_seq_len)
+    elif args.dataset == "babylm":
+        splits = BabyLMDataset.get_splits(tokenizer, config.max_seq_len)
     else:
         raise ValueError(f"Dataset not found: {args.dataset}")
     
