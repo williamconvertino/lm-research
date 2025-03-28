@@ -10,10 +10,10 @@ class Attention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Linear(config.d_div, config.n_heads * config.d_embed, bias=False)
-        self.W_k = nn.Linear(config.d_div, config.n_heads * config.d_embed, bias=False)
-        self.W_v = nn.Linear(config.d_div, config.n_heads * config.d_embed, bias=False)
-        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_div, bias=False)
+        self.W_q = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_k = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_v = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -57,8 +57,8 @@ class FeedForward(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.fc_1 = nn.Linear(config.d_div, 4 * config.d_embed)
-        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_div)
+        self.fc_1 = nn.Linear(config.d_embed, 4 * config.d_embed)
+        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed)
         
         self.activation = nn.GELU()    
         self.drop = nn.Dropout(0.1)
@@ -69,57 +69,34 @@ class FeedForward(nn.Module):
         x = self.drop(x)
         x = self.fc_2(x)
         return x
-    
+
 class TransformerBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         
         self.attention = Attention(config)
         self.feed_forward = FeedForward(config)
-        self.ln_1 = nn.LayerNorm(config.d_div)
-        self.ln_2 = nn.LayerNorm(config.d_div)
+        self.ln_1 = nn.LayerNorm(config.d_embed)
+        self.ln_2 = nn.LayerNorm(config.d_embed)
         
     def forward(self, x):
         x = x + self.attention(self.ln_1(x))
         x = x + self.feed_forward(self.ln_2(x))
         return x
 
-class DivBlock(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        
-        self.attention = Attention(config)
-        self.feed_forward = FeedForward(config)
-        self.ln_f = nn.LayerNorm(config.d_div)
-        self.ln_g = nn.LayerNorm(config.d_div)
-        self.ln_ff = nn.LayerNorm(config.d_div)
-        
-    def forward(self, f, g):
-        
-        q = k = self.ln_f(f)
-        v = self.ln_g(g)
-        
-        f = f + self.attention(q=q, k=k, v=v)
-        
-        g = g + self.feed_forward(self.ln_ff(f))
-        
-        return f, g
-        
-class Epsil(nn.Module):
+class Transformer(nn.Module):
     def __init__(self, config):
         super().__init__()
         
         self.config = config
-        self.config.d_div = config.d_embed // 2
         
-        self.embedding = nn.Embedding(config.vocab_size, config.d_div)
+        self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
 
-        self.div_blocks = nn.ModuleList([DivBlock(config) for _ in range(config.n_layers - 1)])
-        self.transformer_block = TransformerBlock(config)
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
-        self.ln_f = nn.LayerNorm(config.d_div)
+        self.ln_f = nn.LayerNorm(config.d_embed)
 
-        self.lm_head = nn.Linear(config.d_div, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
@@ -140,13 +117,10 @@ class Epsil(nn.Module):
         
         B, S = x.shape
 
-        f = self.embedding(x)
-        g = f
+        x = self.embedding(x)
         
-        for div_block in self.div_blocks:
-            f, g = div_block(f, g)
-        
-        x = self.transformer_block(g)
+        for transformer_block in self.transformer_blocks:
+            x = transformer_block(x)
         
         x = self.ln_f(x)
         

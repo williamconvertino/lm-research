@@ -10,10 +10,10 @@ class Attention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Linear(config.rr, config.n_heads * config.d_embed, bias=False)
-        self.W_k = nn.Linear(config.rr, config.n_heads * config.d_embed, bias=False)
-        self.W_v = nn.Linear(config.rr, config.n_heads * config.d_embed, bias=False)
-        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.rr, bias=False)
+        self.W_q = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_k = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_v = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -57,8 +57,8 @@ class FeedForward(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.fc_1 = nn.Linear(config.rr, 4 * config.d_embed)
-        self.fc_2 = nn.Linear(4 * config.d_embed, config.rr)
+        self.fc_1 = nn.Linear(config.d_embed, 4 * config.d_embed)
+        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed)
         
         self.activation = nn.GELU()    
         self.drop = nn.Dropout(0.1)
@@ -76,30 +76,42 @@ class TransformerBlock(nn.Module):
         
         self.attention = Attention(config)
         self.feed_forward = FeedForward(config)
-        self.ln_1 = nn.LayerNorm(config.rr)
-        self.ln_2 = nn.LayerNorm(config.rr)
+        self.ln_1 = nn.LayerNorm(config.d_embed)
+        self.ln_2 = nn.LayerNorm(config.d_embed)
         
     def forward(self, x):
         x = x + self.attention(self.ln_1(x))
         x = x + self.feed_forward(self.ln_2(x))
         return x
 
-class RRTransformer(nn.Module):
+class GBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         
-        config.ss = int(config.d_embed * config.ss_pct)
-        config.rr = config.d_embed - config.ss
+        self.attention = Attention(config)
+        self.feed_forward = FeedForward(config)
+        self.ln_1 = nn.LayerNorm(config.d_embed)
+        self.ln_2 = nn.LayerNorm(config.d_embed)
+        
+    def forward(self, f, g):
+        f = f + self.attention(self.ln_1(f))
+        g = g + self.feed_forward(self.ln_2(f))
+        return f, g
+
+class Transformer(nn.Module):
+    def __init__(self, config):
+        super().__init__()
         
         self.config = config
         
-        self.embedding = nn.Embedding(config.vocab_size, config.rr)
+        self.embedding = nn.Embedding(config.vocab_size, config.d_embed)
 
-        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
+        self.g_blocks = nn.ModuleList([GBlock(config) for _ in range(config.n_layers - 1)])
+        self.transformer_block = TransformerBlock(config)
         
-        self.ln_f = nn.LayerNorm(config.rr)
+        self.ln_f = nn.LayerNorm(config.d_embed)
 
-        self.lm_head = nn.Linear(config.rr, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.d_embed, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
@@ -120,10 +132,12 @@ class RRTransformer(nn.Module):
         
         B, S = x.shape
 
-        x = self.embedding(x)
+        f = g = self.embedding(x)
         
-        for transformer_block in self.transformer_blocks:
-            x = transformer_block(x)
+        for g_block in self.g_blocks:
+            f, g = g_block(f, g)
+        
+        x = self.transformer_block(f)
         
         x = self.ln_f(x)
         

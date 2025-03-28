@@ -1,9 +1,8 @@
 {
-    "model": "sstransformer",
+    "model": "divformer",
     "max_seq_len": 128,
     "d_embed": 512,
     "n_layers": 3,
     "n_heads": 8,
-    "dropout": 0.1,
-    "ss_pct": 1.0
+    "dropout": 0.1
 }
