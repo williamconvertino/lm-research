@@ -145,7 +145,7 @@ class DivFormer(nn.Module):
             f, g = g_block(f, g)
         
         x = torch.cat([f, g], dim=-1)
-        x = self.transformer_block(f)
+        x = self.transformer_block(x)
         
         x = x[:, :, :self.config.d_embed // 2]
         
