@@ -4,6 +4,72 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchtune.modules import RotaryPositionalEmbeddings
 
+class GAttention(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        
+        self.config = config
+        
+        self.W_q = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_k = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_v = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed // 2, bias=False)
+        
+        self.attn_scale = 1 / math.sqrt(config.d_embed)
+        
+        self.rotary_embeddings = RotaryPositionalEmbeddings(config.d_embed)
+        
+        self.drop_attn = nn.Dropout(0.1)
+        self.drop_resid = nn.Dropout(0.1)
+        
+    def forward(self, q, k=None, v=None):
+        
+        B, S, E = q.shape
+        
+        if k is None:
+            k = q
+        if v is None:
+            v = q
+        
+        q = self.W_q(q).view(B, S, self.config.n_heads, self.config.d_embed).transpose(1, 2)
+        k = self.W_k(k).view(B, S, self.config.n_heads, self.config.d_embed).transpose(1, 2)
+        v = self.W_v(v).view(B, S, self.config.n_heads, self.config.d_embed).transpose(1, 2)
+        
+        q = self.rotary_embeddings(q)
+        k = self.rotary_embeddings(k)
+        
+        causal_mask = torch.triu(torch.ones(S, S), diagonal=1).bool().to(q.device)
+        
+        attn_scores = torch.matmul(q, k.transpose(-2, -1)) * self.attn_scale
+        attn_scores = attn_scores.masked_fill(causal_mask, float('-inf'))
+        
+        attn_probs = F.softmax(attn_scores, dim=-1)
+        attn_probs = self.drop_attn(attn_probs)
+        
+        attn_output = torch.matmul(attn_probs, v)
+        attn_output = attn_output.transpose(1, 2).contiguous().view(B, S, self.config.d_embed * self.config.n_heads)
+        attn_output = self.W_o(attn_output)
+        attn_output = self.drop_resid(attn_output)
+        
+        return attn_output
+
+class GFeedForward(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+
+        self.fc_1 = nn.Linear(config.d_embed, 4 * config.d_embed)
+        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed // 2)
+        
+        self.activation = nn.GELU()    
+        self.drop = nn.Dropout(0.1)
+
+    def forward(self, x):
+        x = self.fc_1(x)
+        x = self.activation(x)
+        x = self.drop(x)
+        x = self.fc_2(x)
+        return x
+
 class Attention(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -89,8 +155,8 @@ class GBlock(nn.Module):
         super().__init__()
         
         self.config = config
-        self.attention = Attention(config)
-        self.feed_forward = FeedForward(config)
+        self.attention = GAttention(config)
+        self.feed_forward = GFeedForward(config)
         
         self.ln_1 = nn.LayerNorm(config.d_embed)
         self.ln_2 = nn.LayerNorm(config.d_embed)
@@ -98,11 +164,11 @@ class GBlock(nn.Module):
     def forward(self, f, g):
         x = torch.cat([f, g], dim=-1)
         
-        f = f + self.attention(self.ln_1(x))[:, :, :self.config.d_embed // 2]
+        f = f + self.attention(self.ln_1(x))
         
         x = torch.cat([f, g], dim=-1)
         
-        g = g + self.feed_forward(self.ln_2(x))[:, :, self.config.d_embed // 2:]
+        g = g + self.feed_forward(self.ln_2(x))
         return f, g
 
 class DivFormer(nn.Module):
