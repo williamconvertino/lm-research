@@ -84,25 +84,7 @@ class TransformerBlock(nn.Module):
         x = x + self.feed_forward(self.ln_2(x))
         return x
 
-class GBlock(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        
-        self.attention = Attention(config)
-        self.feed_forward = FeedForward(config)
-        
-        self.ln_1 = nn.LayerNorm(config.d_embed // 2)
-        self.ln_2 = nn.LayerNorm(config.d_embed // 2)
-        
-    def forward(self, f, g):
-        x = torch.cat([f, g], dim=-1)
-        
-        f = f + self.attention(self.ln_1(x))
-        
-        g = g + self.feed_forward(self.ln_2(f))
-        return f, g
-
-class DivFormer(nn.Module):
+class Halformer(nn.Module):
     def __init__(self, config):
         super().__init__()
         
@@ -110,10 +92,9 @@ class DivFormer(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_embed // 2)
 
-        self.g_blocks = nn.ModuleList([GBlock(config) for _ in range(config.n_layers - 1)])
-        self.transformer_block = TransformerBlock(config)
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
-        self.ln_f = nn.LayerNorm(config.d_embed //2)
+        self.ln_f = nn.LayerNorm(config.d_embed // 2)
 
         self.lm_head = nn.Linear(config.d_embed // 2, config.vocab_size, bias=False)
         self.lm_head.weight = self.embedding.weight
@@ -136,12 +117,14 @@ class DivFormer(nn.Module):
         
         B, S = x.shape
 
-        f = g = self.embedding(x)
+        x = self.embedding(x)
         
-        for g_block in self.g_blocks:
-            f, g = g_block(f, g)
+        x = torch.cat([x, torch.zeros(B, S, self.config.d_embed // 2).to(x.device)], dim=-1)
         
-        x = self.transformer_block(f)
+        for transformer_block in self.transformer_blocks:
+            x = transformer_block(x)
+            
+        x = x[:, :, :self.config.d_embed // 2]
         
         x = self.ln_f(x)
         
