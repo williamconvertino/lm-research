@@ -5,6 +5,7 @@ import torch
 from argparse import ArgumentParser
 from util.trainer import Trainer
 from util.evaluator import Evaluator
+from util.dictionary_learning import DictionaryLearning
 from dataset.tokenizer import Tokenizer
 from dataset.tinystories_dataset import TinyStoriesDataset
 from dataset.bookcorpus import BookCorpusDataset
@@ -41,14 +42,17 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--train", type=str)
     parser.add_argument("--eval", type=str, nargs="+")
+    parser.add_argument("--dl", type=str)
     parser.add_argument("--dataset", type=str, default="tiny_stories")
     parser.add_argument("--wait", action="store_true")
     args = parser.parse_args()
 
-    assert args.train or args.eval, "Must specify either training or evaluation"
-    assert not (args.train and args.eval), "Cannot specify both training and evaluation"
+    assert args.train or args.eval or args.dl, "Must specify either training, evaluation, or dictionary learning"
+    assert not (args.train and args.eval and args.dl), "Cannot specify multiple modes at once"
 
     config = load_config(args.train) if args.train else load_config(args.eval[0])
+    
+    config.gather_neurons = False
     
     tokenizer = Tokenizer()
     config.vocab_size = tokenizer.vocab_size
@@ -83,6 +87,13 @@ def main():
             evaluator.eval_loss()
         if any(flag in ["greedy", "beam", "topk", "nucleus"] for flag in eval_flags):
             evaluator.eval(eval_flags)
+    elif args.dl:
+        assert checkpoint is not None, "No checkpoint found for model, cannot perform dictionary learning"
+        
+        model.load_state_dict(checkpoint["model_state_dict"])
+        
+        dl = DictionaryLearning(model, splits)
+        dl.collect_data(k=1)
 
 if __name__ == "__main__":
     main()
