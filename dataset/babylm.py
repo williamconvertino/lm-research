@@ -1,6 +1,6 @@
 import os
 from datasets import load_dataset
-from .disk_dataset import DiskDataset, DATASET_DIR, Dataset
+from .disk_dataset import DiskDataset, DATASET_DIR
 
 HUGGINGFACE_PATH = "DKYoon/BabyLM-6B"
 
