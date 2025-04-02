@@ -151,7 +151,7 @@ class Evaluator:
         if not torch.cuda.is_available():
             print("CUDA not available, using CPU")
             return torch.device('cpu')
-        vram_required = 10
+        vram_required = 5
         print(f"Estimated VRAM required: {vram_required:.2f}GB")
         for i in range(torch.cuda.device_count()):
             try:
