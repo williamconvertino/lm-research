@@ -40,7 +40,7 @@ class DictionaryLearning:
             for i, batch in enumerate(self.splits["test"]):
                 if i >= k:
                     break
-                
+                batch = batch.to(self.device)
                 _, _ = self.model(batch)
                 
                 
