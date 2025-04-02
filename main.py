@@ -50,7 +50,14 @@ def main():
     assert args.train or args.eval or args.dl, "Must specify either training, evaluation, or dictionary learning"
     assert not (args.train and args.eval and args.dl), "Cannot specify multiple modes at once"
 
-    config = load_config(args.train) if args.train else load_config(args.eval[0])
+    if args.train:
+        model_name = args.train
+    elif args.eval:
+        model_name = args.eval[0]
+    elif args.dl:
+        model_name = args.dl
+    
+    config = load_config(model_name)
     
     config.gather_neurons = False
     
