@@ -147,7 +147,7 @@ class TransformerBlock(nn.Module):
         
     def forward(self, x):
         if self.config.gather_neurons:
-            self.neurons = []
+            self.neurons = {}
             x = x + self.attention(self.ln_1(x))
             self.neurons['attn'] = x
             x = x + self.feed_forward(self.ln_2(x))
