@@ -62,7 +62,7 @@ class DictionaryLearning:
         for split in ["train", "test"]:
             self.generate_neuron_files(split)
 
-    def train_sae(self, layer=0, sublayer='ff', epochs=10, sparsity_lambda = 1e-3, lr = 1e-3):
+    def train_sae(self, layer=0, sublayer='ff', epochs=50, sparsity_lambda = 1e-3, lr = 1e-3):
         
         save_path = os.path.join(self.dl_dir, "train")
 

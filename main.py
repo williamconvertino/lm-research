@@ -99,10 +99,12 @@ def main():
         
         model.load_state_dict(checkpoint["model_state_dict"])
         
-        dl = DictionaryLearning(model, splits, max_samples=1000)
+        dl = DictionaryLearning(model, splits)
         dl.collect_data()
-        dl.train_sae()
-        dl.eval_sae()
+        for layer in range(config.n_layers):
+            for sublayer in ["attn", "ff"]:
+                dl.train_sae(layer, sublayer)
+                dl.eval_sae(layer, sublayer)
         print("Dictionary learning completed")
 
 if __name__ == "__main__":
