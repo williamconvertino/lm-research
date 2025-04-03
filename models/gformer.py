@@ -170,15 +170,24 @@ class GBlock(nn.Module):
         self.ln_ff = nn.LayerNorm(config.d_embed)
         
     def forward(self, f, g):
-        
+        if self.config.gather_neurons:
+            self.neurons = {}
+
         qk = self.ln_f(f)
         v = self.ln_g(g)
 
         f = f + self.attention(q=qk, k=qk, v=v)
         
+        if self.config.gather_neurons:
+            self.neurons['attn'] = f
+
         x = torch.cat([f, g], dim=-1)
         
         g = g + self.feed_forward(self.ln_ff(x))
+        
+        if self.config.gather_neurons:
+            self.neurons['ff'] = g
+
         return f, g
 
 class GFormer(nn.Module):
@@ -198,7 +207,10 @@ class GFormer(nn.Module):
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
-        
+    
+    def get_neurons(self):
+        return [block.neurons for block in self.g_blocks] + [self.transformer_block.neurons]  
+    
     def _init_weights(self, module):
         if isinstance(module, nn.LayerNorm):
             nn.init.ones_(module.weight)
