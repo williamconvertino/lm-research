@@ -56,7 +56,7 @@ class DictionaryLearning:
                     'ff': [neuron.cpu().numpy() for neuron in neurons[0]['ff']],
                 }
 
-                torch.save(os.path.join(self.save_path, f"neurons_{i}.pt"), neurons)
+                torch.save(neurons, os.path.join(self.save_path, f"neurons_{i}.pt"))
                 if i % 100 == 0:
                     print(f"\rCollected neuron data for batch {i}", end="")
 
