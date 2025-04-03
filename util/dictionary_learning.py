@@ -84,7 +84,7 @@ class DictionaryLearning:
             total_loss = 0.0
             for i in range(num_chunks):
 
-                chunk = torch.load(f"{save_path}/neurons_{i}.pt")
+                chunk = torch.load(f"{save_path}/neurons_{i}.pt", weights_only=False)
 
                 for neurons in chunk:
                     batch = torch.tensor(neurons[sublayer][layer]).float().to(device)
@@ -103,7 +103,7 @@ class DictionaryLearning:
 
     def eval_sae(self, layer=0, sublayer='ff'):
         model = SparseAutoencoder(self.model.config)
-        model.load_state_dict(torch.load(f"{self.dl_dir}/sae_model_{layer}_{sublayer}.pt"))
+        model.load_state_dict(torch.load(f"{self.dl_dir}/sae_model_{layer}_{sublayer}.pt"), weights_only=False)
         model.eval()
         model.to(self.device)
 
@@ -122,7 +122,7 @@ class DictionaryLearning:
         all_topk_indices = []
 
         for file in chunk_files:
-            chunk = torch.load(os.path.join(save_path, file))
+            chunk = torch.load(os.path.join(save_path, file), weights_only=False)
             for neurons in chunk:
                 batch = torch.tensor(neurons[sublayer][layer]).float().to(model.device)
                 stats = model.compute_statistics(batch)
