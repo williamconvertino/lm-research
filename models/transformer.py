@@ -73,7 +73,7 @@ class FeedForward(nn.Module):
 class TransformerBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
-        
+        self.config = config
         self.attention = Attention(config)
         self.feed_forward = FeedForward(config)
         self.ln_1 = nn.LayerNorm(config.d_embed)
