@@ -1,6 +1,6 @@
 import torch
 import os
-from sae import SparseAutoencoder, train_sae
+from .sae import SparseAutoencoder, train_sae
 
 class DictionaryLearning:
     
