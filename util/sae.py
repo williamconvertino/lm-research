@@ -5,9 +5,14 @@ import torch.nn.functional as F
 class SparseAutoencoder(nn.Module):
     def __init__(self, config, sparsity_lambda=1e-3):
         super().__init__()
+        self.d_embed = config.d_embed
+
+        if config.name in ["gformer", "divformer"]:
+            self.d_embed = config.d_embed // 2
+
         self.d_hidden = config.d_embed * 8
-        self.encoder = nn.Linear(config.d_embed, self.d_hidden, bias=False)
-        self.decoder = nn.Linear(self.d_hidden, config.d_embed, bias=False)
+        self.encoder = nn.Linear(self.d_embed, self.d_hidden, bias=False)
+        self.decoder = nn.Linear(self.d_hidden, self.d_embed, bias=False)
         self.sparsity_lambda = sparsity_lambda
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
