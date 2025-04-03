@@ -6,7 +6,7 @@ import torch.nn.functional as F
 # hidden_dim = 4096         # overcomplete
 sparsity_lambda = 1e-3
 lr = 1e-3
-epochs = 50
+epochs = 100
 
 class SparseAutoencoder(nn.Module):
     def __init__(self, config, sparsity_lambda=1e-3):
@@ -55,4 +55,4 @@ def train_sae(config, k, layer=0, sublayer='ff'):
         if total_loss < best_loss:
             best_loss = total_loss
             torch.save(model.state_dict(), f"data/dictionary_learning/{config.name}/sae_{sublayer}_{layer}.pt")
-        print(f"Epoch {epoch+1}: Loss={total_loss:.4f}")
+        print(f"\rEpoch {epoch+1}: Loss={total_loss:.4f}", end="")
