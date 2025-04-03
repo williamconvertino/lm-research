@@ -43,6 +43,7 @@ class DictionaryLearning:
                 if i % 100 == 0:
                     print(f"\rCollected neuron data for batch {i}", end="")
 
+        self.model.to("cpu")
         self.model.config.gather_neurons = False
 
     def run_dictionary_learning(self):

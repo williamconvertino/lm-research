@@ -31,7 +31,8 @@ class SparseAutoencoder(nn.Module):
 def train_sae(config, k, layer=0, sublayer='ff'):
 
     model = SparseAutoencoder(config, sparsity_lambda)
-    model.to(config.device)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
     model.train()
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -41,7 +42,7 @@ def train_sae(config, k, layer=0, sublayer='ff'):
         for i in range(k):
 
             neurons = torch.load(f"data/dictionary_learning/{config.name}/neurons_{i}.pt")
-            batch = torch.tensor(neurons[sublayer][layer]).float().to(config.device)
+            batch = torch.tensor(neurons[sublayer][layer]).float().to(device)
             batch = batch.to(model.device)
 
             optimizer.zero_grad()
@@ -50,5 +51,5 @@ def train_sae(config, k, layer=0, sublayer='ff'):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-            
+
         print(f"Epoch {epoch+1}: Loss={total_loss:.4f}")
