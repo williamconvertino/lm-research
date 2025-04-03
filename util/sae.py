@@ -42,7 +42,7 @@ def train_sae(config, k, layer=0, sublayer='ff'):
         total_loss = 0.0
         for i in range(k):
 
-            neurons = torch.load(f"data/dictionary_learning/{config.name}/neurons_{i}.pt")
+            neurons = torch.load(f"data/dictionary_learning/{config.name}/neurons_{i}.pt", weights_only=False)
             batch = torch.tensor(neurons[sublayer][layer]).float().to(device)
             batch = batch.to(model.device)
 

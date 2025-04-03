@@ -17,7 +17,7 @@ class DictionaryLearning:
             print(f"Data already collected. Loading from {self.save_path}")
             return
         
-        print("Collecting neuron data...")
+        print(f"Collecting neuron data for {self.k} batches...")
 
         os.makedirs(self.save_path, exist_ok=True)
         
