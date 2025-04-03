@@ -99,7 +99,7 @@ def main():
         
         model.load_state_dict(checkpoint["model_state_dict"])
         
-        dl = DictionaryLearning(model, splits, k=1000)
+        dl = DictionaryLearning(model, splits, max_samples=1000)
         dl.collect_data()
         dl.train_sae()
         dl.eval_sae()
