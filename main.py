@@ -100,7 +100,9 @@ def main():
         model.load_state_dict(checkpoint["model_state_dict"])
         
         dl = DictionaryLearning(model, splits)
-        dl.collect_data(k=1)
+        dl.collect_data()
+        dl.run_dictionary_learning()
+        print("Dictionary learning completed")
 
 if __name__ == "__main__":
     main()
