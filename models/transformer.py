@@ -80,8 +80,16 @@ class TransformerBlock(nn.Module):
         self.ln_2 = nn.LayerNorm(config.d_embed)
         
     def forward(self, x):
-        x = x + self.attention(self.ln_1(x))
-        x = x + self.feed_forward(self.ln_2(x))
+        if self.config.gather_neurons:
+            self.neurons = {}
+            x = x + self.attention(self.ln_1(x))
+            self.neurons["attn"] = x
+            x = x + self.feed_forward(self.ln_2(x))
+            self.neurons["ff"] = x
+        else:
+            x = x + self.attention(self.ln_1(x))
+            x = x + self.feed_forward(self.ln_2(x))
+        
         return x
 
 class Transformer(nn.Module):
@@ -100,6 +108,9 @@ class Transformer(nn.Module):
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
+
+    def get_neurons(self):
+        return [block.neurons for block in self.transformer_blocks]    
         
     def _init_weights(self, module):
         if isinstance(module, nn.LayerNorm):

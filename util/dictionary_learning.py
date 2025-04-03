@@ -1,4 +1,5 @@
 import torch
+import os
 
 class DictionaryLearning:
     
@@ -6,6 +7,9 @@ class DictionaryLearning:
         self.model = model
         self.splits = splits
         self.device = self._get_device()
+
+        self.save_path = f"data/dictionary_learning/{model.config.name}"
+        os.makedirs(self.save_path, exist_ok=True)
         
     def _get_device(self):
         if not torch.cuda.is_available():
@@ -32,6 +36,8 @@ class DictionaryLearning:
         
     def collect_data(self, k=1):
         
+        print("Collecting neuron data...")
+
         self.model.eval()
         self.model.to(self.device)
         self.model.config.gather_neurons = True
@@ -43,4 +49,15 @@ class DictionaryLearning:
                 batch = batch.to(self.device)
                 _, _ = self.model(batch)
                 
-                
+                neurons = self.model.get_neurons() # [{attn: neurons, ff: neurons}, ... ]
+                neurons = {
+                    'input': batch[0].cpu().numpy(),
+                    'attn': [neuron.cpu().numpy() for neuron in neurons[0]['attn']],
+                    'ff': [neuron.cpu().numpy() for neuron in neurons[0]['ff']],
+                }
+
+                torch.save(os.path.join(self.save_path, f"neurons_{i}.pt"), neurons)
+                if i % 100 == 0:
+                    print(f"\rCollected neuron data for batch {i}", end="")
+
+        self.model.config.gather_neurons = False
