@@ -36,6 +36,7 @@ def train_sae(config, k, layer=0, sublayer='ff'):
     model.train()
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    best_loss = float('inf')
 
     for epoch in range(epochs):
         total_loss = 0.0
@@ -51,5 +52,7 @@ def train_sae(config, k, layer=0, sublayer='ff'):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-
+        if total_loss < best_loss:
+            best_loss = total_loss
+            torch.save(model.state_dict(), f"data/dictionary_learning/{config.name}/sae_{sublayer}_{layer}.pt")
         print(f"Epoch {epoch+1}: Loss={total_loss:.4f}")

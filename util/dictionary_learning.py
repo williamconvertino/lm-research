@@ -4,10 +4,10 @@ from .sae import SparseAutoencoder, train_sae
 
 class DictionaryLearning:
     
-    def __init__(self, model, splits, k=1):
+    def __init__(self, model, splits, k=None):
         self.model = model
         self.splits = splits
-        self.k = k
+        self.k = k if k is not None else len(splits["test"])
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.save_path = f"data/dictionary_learning/{model.config.name}"
         
