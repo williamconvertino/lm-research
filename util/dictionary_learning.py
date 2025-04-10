@@ -179,12 +179,12 @@ class DictionaryLearning:
         print(f"Avg Recon Loss       : {total_recon_loss / num_batches:.4f}")
         print(f"Avg Sparsity Loss    : {total_sparsity_loss / num_batches:.4f}")
         print(f"Avg L1 Sparsity      : {total_l1_sparsity / num_batches:.4f}")
-        print(f"Sparsity % (>|{epsilon}|): {(mean_feature_use > 0).sum() / num_features * 100:.2f}%")
-        print(f"Feature Use Mean     : {mean_feature_use.mean():.4f}")
-        print(f"Feature Use Std      : {mean_feature_use.std():.4f}")
-        print(f"Feature Use Min/Max  : {mean_feature_use.min():.4f} / {mean_feature_use.max():.4f}")
-        print(f"Weights Min/Max      : {all_weights.min():.4f} / {all_weights.max():.4f}")
-        print(f"Weights Mean/Std     : {all_weights.mean():.4f} / {all_weights.std():.4f}")
+        # print(f"Sparsity % (>|{epsilon}|): {(mean_feature_use > 0).sum() / num_features * 100:.2f}%")
+        # print(f"Feature Use Mean     : {mean_feature_use.mean():.4f}")
+        # print(f"Feature Use Std      : {mean_feature_use.std():.4f}")
+        # print(f"Feature Use Min/Max  : {mean_feature_use.min():.4f} / {mean_feature_use.max():.4f}")
+        # print(f"Weights Min/Max      : {all_weights.min():.4f} / {all_weights.max():.4f}")
+        # print(f"Weights Mean/Std     : {all_weights.mean():.4f} / {all_weights.std():.4f}")
         
         used_often = (mean_feature_use > 0.05).sum()
         print(f"# Features Used >5%  : {used_often} / {num_features}")
@@ -197,40 +197,40 @@ class DictionaryLearning:
             print(f"  Feature {feat}: used {mean_feature_use[feat]*100:.2f}% of the time")
         
         
-        token_activation_counts = {feat: {} for feat in top5_features}
-        token_activation_totals = {feat: {} for feat in top5_features}
+        # token_activation_counts = {feat: {} for feat in top5_features}
+        # token_activation_totals = {feat: {} for feat in top5_features}
 
-        for f in chunk_files:
-            chunk = torch.load(os.path.join(save_path, f), weights_only=False)
-            for neurons in chunk:
-                batch_activations = torch.tensor(neurons[sublayer][layer]).float().to(self.device)
-                tokens = neurons['input']  # shape: (batch_size, seq_len)
+        # for f in chunk_files:
+        #     chunk = torch.load(os.path.join(save_path, f), weights_only=False)
+        #     for neurons in chunk:
+        #         batch_activations = torch.tensor(neurons[sublayer][layer]).float().to(self.device)
+        #         tokens = neurons['input']  # shape: (batch_size, seq_len)
 
-                with torch.no_grad():
-                    _, z = model(batch_activations)
+        #         with torch.no_grad():
+        #             _, z = model(batch_activations)
 
-                z = z.cpu().numpy()  # shape: (batch_size, num_features)
+        #         z = z.cpu().numpy()  # shape: (batch_size, num_features)
 
-                for i in range(z.shape[0]):  # for each sequence
-                    for j in range(z.shape[1]):  # for each feature
-                        if j in top5_features:
-                            activation = z[i, j]
-                            if activation > epsilon:
-                                # each i corresponds to a sequence of tokens
-                                input_tokens = tokens[i].tolist()
-                                for token in input_tokens:
-                                    token_activation_totals[j][token] = token_activation_totals[j].get(token, 0.0) + activation
-                                    token_activation_counts[j][token] = token_activation_counts[j].get(token, 0) + 1
+        #         for i in range(z.shape[0]):  # for each sequence
+        #             for j in range(z.shape[1]):  # for each feature
+        #                 if j in top5_features:
+        #                     activation = z[i, j]
+        #                     if activation > epsilon:
+        #                         # each i corresponds to a sequence of tokens
+        #                         input_tokens = tokens[i].tolist()
+        #                         for token in input_tokens:
+        #                             token_activation_totals[j][token] = token_activation_totals[j].get(token, 0.0) + activation
+        #                             token_activation_counts[j][token] = token_activation_counts[j].get(token, 0) + 1
 
-        for feat in top5_features:
-            print(f"\nTop tokens for Feature {feat} (used {mean_feature_use[feat]*100:.2f}% of the time):")
+        # for feat in top5_features:
+        #     print(f"\nTop tokens for Feature {feat} (used {mean_feature_use[feat]*100:.2f}% of the time):")
             
-            token_scores = {
-                token: token_activation_totals[feat][token] / token_activation_counts[feat][token]
-                for token in token_activation_counts[feat]
-            }
+        #     token_scores = {
+        #         token: token_activation_totals[feat][token] / token_activation_counts[feat][token]
+        #         for token in token_activation_counts[feat]
+        #     }
 
-            top_tokens = sorted(token_scores.items(), key=lambda x: x[1], reverse=True)[:5]
-            for token_id, score in top_tokens:
-                token_str = self.tokenizer.decode([int(token_id)]).strip()
-                print(f"  Token '{token_str}' (ID: {token_id}) — Avg Activation: {score:.4f}")
+        #     top_tokens = sorted(token_scores.items(), key=lambda x: x[1], reverse=True)[:5]
+        #     for token_id, score in top_tokens:
+        #         token_str = self.tokenizer.decode([int(token_id)]).strip()
+        #         print(f"  Token '{token_str}' (ID: {token_id}) — Avg Activation: {score:.4f}")
