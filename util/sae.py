@@ -52,6 +52,8 @@ class SparseAutoencoder(nn.Module):
         topk_val, topk_idx = torch.topk(z, k=5, dim=1)  # top-5 active features per example
         stats["topk_indices"] = topk_idx.cpu()
 
+        stats["reconstruction_loss"] = F.mse_loss(self.decoder(z), x).item()  # Reconstruction loss
+
         return stats
 
     @torch.no_grad()

@@ -122,6 +122,7 @@ class DictionaryLearning:
         active_features_sum = 0.0
         feature_usage_total = None
         all_topk_indices = []
+        reconstruction_loss = 0.0
 
         for file in chunk_files:
             chunk = torch.load(os.path.join(save_path, file), weights_only=False)
@@ -142,6 +143,8 @@ class DictionaryLearning:
                     feature_usage_total += stats["feature_usage_frequency"] * batch_size
 
                 all_topk_indices.append(stats["topk_indices"])
+                
+                reconstruction_loss += stats["reconstruction_loss"] * batch_size
 
         # Final Aggregates
         avg_l1 = l1_sum / total_examples
@@ -149,6 +152,7 @@ class DictionaryLearning:
         avg_active_features = active_features_sum / total_examples
         feature_usage_freq = feature_usage_total / total_examples
         topk_indices = torch.cat(all_topk_indices, dim=0)
+        reconstruction_loss /= total_examples
 
         # Print summary
         print("\n=== Aggregated Sparse Autoencoder Statistics ===")
@@ -159,6 +163,7 @@ class DictionaryLearning:
         print(f"Max feature usage freq:     {feature_usage_freq.max().item():.4f}")
         print(f"Mean feature usage freq:    {feature_usage_freq.mean().item():.4f}")
         print(f"Features used >5% of time:  {(feature_usage_freq > 0.05).sum().item()} / {len(feature_usage_freq)}")
+        print(f"Reconstruction loss:        {reconstruction_loss:.4f}")
 
         print(f"\n--- Top-5 Active Features (first 5 examples) ---")
         for i in range(min(5, topk_indices.shape[0])):
