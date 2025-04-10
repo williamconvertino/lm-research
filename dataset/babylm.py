@@ -1,5 +1,5 @@
 import os
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 from .disk_dataset import DiskDataset, DATASET_DIR
 
 HUGGINGFACE_PATH = "DKYoon/BabyLM-6B"
@@ -28,7 +28,7 @@ class BabyLMDataset(DiskDataset):
     
         super().__init__(file_path, tokenizer, context_size, do_shuffle=do_shuffle, allow_overlap=allow_overlap)
 
-    def load_dataset_from_files(folder_path):
+    def load_dataset_from_files(self, folder_path):
         data = []
         for filename in os.listdir(folder_path):
             file_path = os.path.join(folder_path, filename)
