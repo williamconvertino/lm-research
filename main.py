@@ -99,7 +99,7 @@ def main():
         
         model.load_state_dict(checkpoint["model_state_dict"])
         
-        dl = DictionaryLearning(model, splits)
+        dl = DictionaryLearning(model, splits, tokenizer)
         dl.collect_data()
         for layer in range(config.n_layers):
             for sublayer in ["attn", "ff"]:
