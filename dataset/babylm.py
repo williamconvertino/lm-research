@@ -14,9 +14,9 @@ class BabyLMDataset(DiskDataset):
 
             print(f"Creating BabyLM [{split}] dataset files...")
             
-            train_path = "{DATASET_DIR}/raw/train_100M"
-            val_path = "{DATASET_DIR}/raw/dev"
-            test_path = "{DATASET_DIR}/raw/test"
+            train_path = f"{DATASET_DIR}/raw/train_100M"
+            val_path = f"{DATASET_DIR}/raw/dev"
+            test_path = f"{DATASET_DIR}/raw/test"
 
             train_dataset = self.load_dataset_from_files(train_path)
             test_dataset = self.load_dataset_from_files(test_path)
