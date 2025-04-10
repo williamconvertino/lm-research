@@ -105,7 +105,7 @@ class DictionaryLearning:
 
     def eval_sae(self, layer=0, sublayer='ff'):
         model = SparseAutoencoder(self.model.config)
-        model.load_state_dict(torch.load(f"{self.dl_dir}/sae_model_{layer}_{sublayer}.pt"), weights_only=False)
+        model.load_state_dict(torch.load(f"{self.dl_dir}/sae_model_{layer}_{sublayer}.pt", weights_only=False))
         model.eval()
         model.to(self.device)
 
