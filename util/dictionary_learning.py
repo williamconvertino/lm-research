@@ -126,10 +126,11 @@ class DictionaryLearning:
     def eval_sae(self, layer=0, sublayer='ff', epsilon=1e-3):
         model = SparseAutoencoder(self.model.config)
         
-        checkpoint = torch.load(f"{self.dl_dir}/sae_model_{layer}_{sublayer}.pt", weights_only=False)
-        print(f"Loading model from {self.dl_dir}/sae_model_{layer}_{sublayer}.pt")
-        print(f"Epoch: {checkpoint['epoch']}, Loss: {checkpoint['loss']:.4f}, Recon Loss: {checkpoint['recon_loss']:.4f}, Sparsity Loss: {checkpoint['sparsity_loss']:.4f}")
-        model.load_state_dict(checkpoint['model_state_dict'])
+        # checkpoint = torch.load(f"{self.dl_dir}/sae_model_{layer}_{sublayer}.pt", weights_only=False)
+        # print(f"Loading model from {self.dl_dir}/sae_model_{layer}_{sublayer}.pt")
+        # print(f"Epoch: {checkpoint['epoch']}, Loss: {checkpoint['loss']:.4f}, Recon Loss: {checkpoint['recon_loss']:.4f}, Sparsity Loss: {checkpoint['sparsity_loss']:.4f}")
+        # model.load_state_dict(checkpoint['model_state_dict'])
+        model.load_state_dict(torch.load(f"{self.dl_dir}/sae_model_{layer}_{sublayer}.pt", weights_only=False))
         model.eval()
         model.to(self.device)
 
