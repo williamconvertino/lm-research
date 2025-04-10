@@ -7,7 +7,7 @@ class SparseAutoencoder(nn.Module):
         super().__init__()
         self.d_embed = config.d_embed
 
-        if config.name in ["gformer", "divformer"]:
+        if config.name in ["gformer", "divformer", "halformer"]:
             self.d_embed = config.d_embed // 2
 
         self.d_hidden = config.d_embed * 8

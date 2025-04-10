@@ -83,9 +83,9 @@ class TransformerBlock(nn.Module):
         if self.config.gather_neurons:
             self.neurons = {}
             x = x + self.attention(self.ln_1(x))
-            self.neurons['attn'] = x
+            self.neurons['attn'] = x[:, :, :self.config.d_embed // 2]
             x = x + self.feed_forward(self.ln_2(x))
-            self.neurons['ff'] = x
+            self.neurons['ff'] = x[:, :, :self.config.d_embed // 2]
         else:
             x = x + self.attention(self.ln_1(x))
             x = x + self.feed_forward(self.ln_2(x))
