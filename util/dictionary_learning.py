@@ -70,6 +70,8 @@ class DictionaryLearning:
             print(f"Model already trained.")
             return
         
+        print(f"No model found at {save_path}/sae_model_{layer}_{sublayer}.pt, training...")
+        
         model = SparseAutoencoder(self.model.config, sparsity_lambda)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
