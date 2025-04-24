@@ -1,5 +1,5 @@
 torch
-torchtune
+torchtune<0.3.0
 torchao
 tqdm
 datasets
