@@ -76,6 +76,7 @@ def main():
         raise ValueError(f"Dataset not found: {args.dataset}")
     
     model = load_model(config)
+    print("Works")
     checkpoint = load_most_recent_checkpoint(model)
     
     if args.wait:
