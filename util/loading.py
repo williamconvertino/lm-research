@@ -24,8 +24,8 @@ def load_model(config):
     
     try:
         model_file = importlib.import_module(module_name)
-    except ModuleNotFoundError:
-        raise ValueError(f"Module not found: {module_name}")
+    except Exception as e:
+        raise RuntimeError(f"Failed to import {module_name}: {e}")
     
     for attr in dir(model_file): # Find class in module
         if attr.lower() == model_name.lower().replace("_", ""):
