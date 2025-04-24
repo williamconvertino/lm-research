@@ -84,7 +84,6 @@ class LLMEvaluator:
         self.api_key = os.getenv("OPENAI_API_KEY")
         assert self.api_key is not None, "OPENAI_API_KEY is not set. Please set it in your environment variables."
         self.client = OpenAI(api_key=self.api_key)
-        self.client.set_system_prompt(SYSTEM_PROMPT)
         
         self.info_path = os.path.join(BASE_DIR, f"{model.config.name}/info.json")
         self.input_path = os.path.join(BASE_DIR, f"{model.config.name}/input.jsonl")
