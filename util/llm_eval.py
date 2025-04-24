@@ -80,7 +80,9 @@ class LLMEvaluator:
         self.model.to(self.device)
         self.model.eval()
         
+        load_dotenv()
         self.api_key = os.getenv("OPENAI_API_KEY")
+        assert self.api_key is not None, "OPENAI_API_KEY is not set. Please set it in your environment variables."
         self.client = OpenAI(api_key=self.api_key)
         self.client.set_system_prompt(SYSTEM_PROMPT)
         
