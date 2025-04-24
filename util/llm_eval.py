@@ -101,7 +101,7 @@ class LLMEvaluator:
             if num_generations >= max_generations:
                 break
             
-            sequence = batch['input_ids'][0].tolist()
+            sequence = batch[0].tolist()
             input_size = min(self.model.config.max_seq_len // 2, len(sequence) // 2)
             
             if input_size < 10:
