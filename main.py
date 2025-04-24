@@ -12,6 +12,7 @@ from dataset.bookcorpus import BookCorpusDataset
 from dataset.slimpajama import SlimPajamaDataset
 from dataset.babylm import BabyLMDataset
 from util.loading import load_model, load_most_recent_checkpoint, load_config
+from util.llm_eval import LLMEvaluator
 
 def wait_for_free_gpu(vram=13):
     if not torch.cuda.is_available():
@@ -42,18 +43,18 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--train", type=str)
     parser.add_argument("--eval", type=str, nargs="+")
+    parser.add_argument("--gpt_eval", type=str)
     parser.add_argument("--dl", type=str)
     parser.add_argument("--dataset", type=str, default="tiny_stories")
     parser.add_argument("--wait", action="store_true")
     args = parser.parse_args()
 
-    assert args.train or args.eval or args.dl, "Must specify either training, evaluation, or dictionary learning"
-    assert not (args.train and args.eval and args.dl), "Cannot specify multiple modes at once"
-
     if args.train:
         model_name = args.train
     elif args.eval:
         model_name = args.eval[0]
+    elif args.gpt_eval:
+        model_name = args.gpt_eval
     elif args.dl:
         model_name = args.dl
     
@@ -106,6 +107,13 @@ def main():
                 dl.train_sae(layer, sublayer)
                 dl.eval_sae(layer, sublayer)
         print("Dictionary learning completed")
+    elif args.gpt_eval:
+        assert checkpoint is not None, "No checkpoint found for model, cannot perform GPT evaluation"
+        
+        model.load_state_dict(checkpoint["model_state_dict"])
+        
+        gpt_eval = LLMEvaluator(model, tokenizer, splits)
+        gpt_eval.run_llm_eval()
 
 if __name__ == "__main__":
     main()

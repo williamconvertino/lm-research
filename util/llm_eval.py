@@ -96,7 +96,7 @@ class LLMEvaluator:
         num_generations = 0
         num_skipped = 0
         
-        for batch in enumerate(self.splits):
+        for batch in enumerate(self.splits["test"]):
             if num_generations >= max_generations:
                 break
             
