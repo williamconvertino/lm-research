@@ -89,6 +89,8 @@ class LLMEvaluator:
         self.input_path = os.path.join(BASE_DIR, f"{model.config.name}/input.jsonl")
         self.output_path = os.path.join(BASE_DIR, f"{model.config.name}/output.jsonl")
         self.results_path = os.path.join(BASE_DIR, f"{model.config.name}/results.json")
+        
+        os.makedirs(f"{BASE_DIR}/{model.config.name}", exist_ok=True)
     
     def generate_input(self, max_generations=200):
         
