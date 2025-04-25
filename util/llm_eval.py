@@ -114,8 +114,8 @@ class LLMEvaluator:
             
             assert not self.tokenizer.eos_token_id in generation, "EOS token found in generation."
             
-            decoded_input = self.tokenizer.decode(input, skip_special_tokens=True)
-            decoded_generation = self.tokenizer.decode(generation, skip_special_tokens=True)
+            decoded_input = self.tokenizer.decode(input)
+            decoded_generation = self.tokenizer.decode(generation)
             
             prompt = USER_PROMPT.replace('[STORY_BEGIN]', decoded_input).replace('[STORY_END]', decoded_generation)
             
