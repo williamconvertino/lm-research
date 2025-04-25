@@ -182,7 +182,7 @@ class LLMEvaluator:
             if batch_id is None:
                 raise ValueError("Input batch id was not found.")
         
-        batch = self.client.batches.retrieve(batch["batch_id"])
+        batch = self.client.batches.retrieve(batch_id)
         if batch.status == "completed":
             print(f"Batch {batch_id} completed.")
             output_id = batch.output_file_id
