@@ -231,6 +231,8 @@ class LLMEvaluator:
             "creativity": []
         }
         
+        num_errors = 0
+        
         for line in lines:
             if not line:
                 continue
