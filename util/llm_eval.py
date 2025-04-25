@@ -97,11 +97,10 @@ class LLMEvaluator:
         num_generations = 0
         num_skipped = 0
         
-        for batch in enumerate(self.test_loader):
+        for batch in self.test_loader:
             if num_generations >= max_generations:
                 break
             
-            print(batch)
             sequence = batch[0].tolist()
             input_size = min(self.model.config.max_seq_len // 2, len(sequence) // 2)
             
