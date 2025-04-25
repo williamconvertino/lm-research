@@ -176,9 +176,9 @@ class LLMEvaluator:
             print(f"Output file {self.output_path} exists.")
             return True
         
-        with open(self.input_path, "r") as f:
-            batch = json.load(f)
-            batch_id = batch["batch_id"]
+        with open(self.info_path, "r") as f:
+            info = json.load(f)
+            batch_id = info["batch_id"]
             if batch_id is None:
                 raise ValueError("Input batch id was not found.")
         
