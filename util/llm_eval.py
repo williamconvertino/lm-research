@@ -186,7 +186,7 @@ class LLMEvaluator:
         if batch.status == "completed":
             print(f"Batch {batch_id} completed.")
             output_id = batch.output_file_id
-            output_text = self.client.files.retrieve(output_id).text
+            output_text = self.client.files.content(output_id).text
             with open(self.output_path, "w+") as f:
                 f.write(output_text)
             print(f"Output written to {self.output_path}")
@@ -195,6 +195,7 @@ class LLMEvaluator:
             raise ValueError(f"Batch {batch_id} failed.")
         else:
             print(f"Batch {batch_id} is still processing.")
+            print(f"Status: {batch.status}")
             return False
     
     def parse_batch_output(self):
