@@ -119,7 +119,7 @@ class LLMEvaluator:
             
             prompt = USER_PROMPT.replace('[STORY_BEGIN]', decoded_input).replace('[STORY_END]', decoded_generation)
             
-            id = f"{self.model.name}_{num_generations}"
+            id = f"{self.model.config.name}_{num_generations}"
             
             input_items.append({
                     "custom_id": f"{id}",
@@ -159,7 +159,7 @@ class LLMEvaluator:
             endpoint="/v1/chat/completions",
             completion_window='24h',
             metadata={
-            'description': f'{self.model.name} evaluation'
+            'description': f'{self.model.config.name} evaluation'
             }
         )
         
