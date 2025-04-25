@@ -75,7 +75,7 @@ class LLMEvaluator:
     def __init__(self, model, tokenizer, splits):
         self.model = model
         self.tokenizer = tokenizer
-        self.splits = splits
+        self.test_loader = splits["test"]
         self.device = get_device()
         self.model.to(self.device)
         self.model.eval()
@@ -97,11 +97,12 @@ class LLMEvaluator:
         num_generations = 0
         num_skipped = 0
         
-        for batch in enumerate(self.splits["test"]):
+        for batch in enumerate(self.test_loader):
             if num_generations >= max_generations:
                 break
             
-            sequence = batch.tolist()
+            print(batch)
+            sequence = batch[0].tolist()
             input_size = min(self.model.config.max_seq_len // 2, len(sequence) // 2)
             
             if input_size < 10:
