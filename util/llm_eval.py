@@ -207,12 +207,61 @@ class LLMEvaluator:
         with open(self.output_path, "r") as f:
             lines = f.readlines()
         
+        def parse_score(text, tag):
+            try:
+                text = text.split(f'<{tag}>')[1].split(f'</{tag}>')[0].strip()
+            except:
+                print(f"Error parsing {tag} from text: {text}")
+                return None
+            
+            if '/' in text:
+                text = text.split('/')[0].strip()
+            
+            try:
+                score = int(text)
+            except:
+                return None
+            
+            return score
+        
+        score_map = {
+            "grammar": [],
+            "consistency": [],
+            "plot": [],
+            "creativity": []
+        }
+        
         for line in lines:
-            print(line)
-            return None
+            if not line:
+                continue
+            response = json.loads(line)
+            custom_id = response['custom_id']
+            content = response['response']['body']['choices'][0]['message']['content']
+            
+            grammar_score = parse_score(content, 'GRAMMAR_GRADE')
+            consistency_score = parse_score(content, 'CONSISTENCY_GRADE')
+            plot_score = parse_score(content, 'PLOT_GRADE')
+            creativity_score = parse_score(content, 'CREATIVITY_GRADE')
+            
+            if None in [grammar_score, consistency_score, plot_score, creativity_score]:
+                num_errors += 1
+                continue
+            
+            score_map["grammar"].append(grammar_score)
+            score_map["consistency"].append(consistency_score)
+            score_map["plot"].append(plot_score)
+            score_map["creativity"].append(creativity_score)
         
-        return None
+        print(f"Parsed {len(lines) - num_errors} scores (skipped {num_errors})")
         
+        return {
+            "grammar": sum(score_map["grammar"]) / len(score_map["grammar"]),
+            "consistency": sum(score_map["consistency"]) / len(score_map["consistency"]),
+            "plot": sum(score_map["plot"]) / len(score_map["plot"]),
+            "creativity": sum(score_map["creativity"]) / len(score_map["creativity"]),
+            "total": sum(score_map["grammar"] + score_map["consistency"] + score_map["plot"] + score_map["creativity"]) / (4 * len(score_map["grammar"]))
+        }
+            
     def run_llm_eval(self):
         
         self.create_batch()
