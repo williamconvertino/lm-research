@@ -203,6 +203,13 @@ class LLMEvaluator:
         if os.path.exists(self.results_path):
             with open(self.results_path, "r") as f:
                 return json.load(f)
+            
+        with open(self.output_path, "r") as f:
+            lines = f.readlines()
+        
+        for line in lines:
+            print(line)
+            return None
         
         return None
         
