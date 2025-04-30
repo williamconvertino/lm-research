@@ -1,6 +1,6 @@
 Experiment Settings:
 
-Transformer (FG into transformer) (FG into FF) (0.93?)
+Transformer (FG into transformer) (FG into FF) (G skip FF) (0.93?)
 
 T1 - F into transformer
 T2 - G into transformer

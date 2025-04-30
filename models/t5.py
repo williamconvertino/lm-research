@@ -183,7 +183,7 @@ class GBlock(nn.Module):
 
         x = torch.cat([f, g], dim=-1)
         
-        g = g + self.feed_forward(self.ln_ff(x))
+        g = self.feed_forward(self.ln_ff(x))
         
         if self.config.gather_neurons:
             self.neurons['ff'] = g
