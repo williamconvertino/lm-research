@@ -10,9 +10,9 @@ class GAttention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_k = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_v = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
+        self.W_q = nn.Linear(config.d_embed // 2, config.n_heads * config.d_embed, bias=False)
+        self.W_k = nn.Linear(config.d_embed // 2, config.n_heads * config.d_embed, bias=False)
+        self.W_v = nn.Linear(config.d_embed // 2, config.n_heads * config.d_embed, bias=False)
         self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed // 2, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
@@ -76,10 +76,10 @@ class Attention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_k = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_v = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed, bias=False)
+        self.W_q = nn.Linear(config.d_embed // 2, config.n_heads * config.d_embed, bias=False)
+        self.W_k = nn.Linear(config.d_embed  // 2, config.n_heads * config.d_embed, bias=False)
+        self.W_v = nn.Linear(config.d_embed  // 2, config.n_heads * config.d_embed, bias=False)
+        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed  // 2, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -123,8 +123,8 @@ class FeedForward(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.fc_1 = nn.Linear(config.d_embed, 4 * config.d_embed)
-        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed)
+        self.fc_1 = nn.Linear(config.d_embed  // 2, 4 * config.d_embed)
+        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed  // 2)
         
         self.activation = nn.GELU()    
         self.drop = nn.Dropout(0.1)
@@ -142,8 +142,8 @@ class TransformerBlock(nn.Module):
         self.config = config
         self.attention = Attention(config)
         self.feed_forward = FeedForward(config)
-        self.ln_1 = nn.LayerNorm(config.d_embed)
-        self.ln_2 = nn.LayerNorm(config.d_embed)
+        self.ln_1 = nn.LayerNorm(config.d_embed  // 2)
+        self.ln_2 = nn.LayerNorm(config.d_embed  // 2)
         
     def forward(self, x):
         if self.config.gather_neurons:
@@ -165,31 +165,32 @@ class GBlock(nn.Module):
         self.attention = GAttention(config)
         self.feed_forward = GFeedForward(config)
         
-        self.ln_1 = nn.LayerNorm(config.d_embed)
-        self.ln_2 = nn.LayerNorm(config.d_embed)
+        self.ln_f = nn.LayerNorm(config.d_embed // 2)
+        self.ln_g = nn.LayerNorm(config.d_embed // 2)
+        self.ln_ff = nn.LayerNorm(config.d_embed)
         
     def forward(self, f, g):
-
         if self.config.gather_neurons:
             self.neurons = {}
 
-        x = torch.cat([f, g], dim=-1)
-        
-        f = f + self.attention(self.ln_1(x))
+        qk = self.ln_f(f)
+        v = self.ln_g(g)
+
+        f = f + self.attention(q=qk, k=qk, v=v)
         
         if self.config.gather_neurons:
             self.neurons['attn'] = f
 
         x = torch.cat([f, g], dim=-1)
         
-        g = g + self.feed_forward(self.ln_2(x))
-
+        g = g + self.feed_forward(self.ln_ff(x))
+        
         if self.config.gather_neurons:
             self.neurons['ff'] = g
 
         return f, g
 
-class DivFormer(nn.Module):
+class T1(nn.Module):
     def __init__(self, config):
         super().__init__()
         
@@ -197,8 +198,8 @@ class DivFormer(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_embed // 2)
 
-        self.g_blocks = nn.ModuleList([GBlock(config) for _ in range(config.n_layers - 1)])
-        self.transformer_block = TransformerBlock(config)
+        self.g_blocks = nn.ModuleList([GBlock(config) for _ in range(config.n_g_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
         self.ln_f = nn.LayerNorm(config.d_embed //2)
 
@@ -206,7 +207,10 @@ class DivFormer(nn.Module):
         self.lm_head.weight = self.embedding.weight
         
         self.apply(self._init_weights)
-        
+    
+    def get_neurons(self):
+        return [block.neurons for block in self.g_blocks] + [self.transformer_block.neurons]  
+    
     def _init_weights(self, module):
         if isinstance(module, nn.LayerNorm):
             nn.init.ones_(module.weight)
@@ -218,10 +222,7 @@ class DivFormer(nn.Module):
                 nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
-    
-    def get_neurons(self):
-        return [block.neurons for block in self.g_blocks] + [self.transformer_block.neurons]  
-    
+        
     def forward(self, x, targets=None, ignore_index=-1):
         
         B, S = x.shape
@@ -231,10 +232,11 @@ class DivFormer(nn.Module):
         for g_block in self.g_blocks:
             f, g = g_block(f, g)
         
-        x = torch.cat([f, g], dim=-1)
-        x = self.transformer_block(x)
+        # x = torch.cat([f, g], dim=-1)
+        x = f
         
-        x = x[:, :, :self.config.d_embed // 2]
+        for transformer_block in self.transformer_blocks:
+            x = transformer_block(x)
         
         x = self.ln_f(x)
         

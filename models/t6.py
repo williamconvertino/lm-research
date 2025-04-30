@@ -190,7 +190,7 @@ class GBlock(nn.Module):
 
         return f, g
 
-class GFormerOld(nn.Module):
+class T6(nn.Module):
     def __init__(self, config):
         super().__init__()
         
@@ -198,8 +198,8 @@ class GFormerOld(nn.Module):
         
         self.embedding = nn.Embedding(config.vocab_size, config.d_embed // 2)
 
-        self.g_blocks = nn.ModuleList([GBlock(config) for _ in range(config.n_layers - 1)])
-        self.transformer_block = TransformerBlock(config)
+        self.g_blocks = nn.ModuleList([GBlock(config) for _ in range(config.n_g_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layers)])
         
         self.ln_f = nn.LayerNorm(config.d_embed //2)
 
@@ -233,7 +233,9 @@ class GFormerOld(nn.Module):
             f, g = g_block(f, g)
         
         x = torch.cat([f, g], dim=-1)
-        x = self.transformer_block(x)
+        
+        for transformer_block in self.transformer_blocks:
+            x = transformer_block(x)
         
         x = x[:, :, :self.config.d_embed // 2]
         

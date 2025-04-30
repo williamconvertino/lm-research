@@ -116,13 +116,10 @@ def generate_text_nucleus(model, tokenizer, prompt, max_length=50, temperature=1
         logits, _ = model(input_ids)
         next_token_logits = logits[:, -1, :] / temperature
         
-        # Compute probabilities and sort them
         probs = F.softmax(next_token_logits, dim=-1)
         sorted_probs, sorted_indices = torch.sort(probs, descending=True, dim=-1)
         cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
-        # Remove tokens with cumulative probability above the threshold
         sorted_indices_to_remove = cumulative_probs > top_p
-        # Shift the indices to ensure at least one token is kept
         sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
         sorted_indices_to_remove[..., 0] = 0
         

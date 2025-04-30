@@ -1,0 +1,10 @@
+{
+    "model": "t3",
+    "max_seq_len": 128,
+    "d_embed": 512,
+    "n_layers": 2,
+    "n_g_layers": 1,
+    "n_heads": 8,
+    "dropout": 0.1,
+    "concat_trans_input": true
+}
