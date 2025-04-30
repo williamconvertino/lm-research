@@ -76,10 +76,10 @@ class Attention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_k = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_v = nn.Linear(config.d_embed, config.n_heads * config.d_embed, bias=False)
-        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed, bias=False)
+        self.W_q = nn.Linear(config.d_embed // 2, config.n_heads * config.d_embed, bias=False)
+        self.W_k = nn.Linear(config.d_embed  // 2, config.n_heads * config.d_embed, bias=False)
+        self.W_v = nn.Linear(config.d_embed  // 2, config.n_heads * config.d_embed, bias=False)
+        self.W_o = nn.Linear(config.n_heads * config.d_embed, config.d_embed  // 2, bias=False)
         
         self.attn_scale = 1 / math.sqrt(config.d_embed)
         
@@ -123,8 +123,8 @@ class FeedForward(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.fc_1 = nn.Linear(config.d_embed, 4 * config.d_embed)
-        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed)
+        self.fc_1 = nn.Linear(config.d_embed  // 2, 4 * config.d_embed)
+        self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed  // 2)
         
         self.activation = nn.GELU()    
         self.drop = nn.Dropout(0.1)
@@ -142,8 +142,8 @@ class TransformerBlock(nn.Module):
         self.config = config
         self.attention = Attention(config)
         self.feed_forward = FeedForward(config)
-        self.ln_1 = nn.LayerNorm(config.d_embed)
-        self.ln_2 = nn.LayerNorm(config.d_embed)
+        self.ln_1 = nn.LayerNorm(config.d_embed  // 2)
+        self.ln_2 = nn.LayerNorm(config.d_embed  // 2)
         
     def forward(self, x):
         if self.config.gather_neurons:
@@ -232,12 +232,11 @@ class T2(nn.Module):
         for g_block in self.g_blocks:
             f, g = g_block(f, g)
         
-        x = torch.cat([f, g], dim=-1)
+        # x = torch.cat([f, g], dim=-1)
+        x = g
         
         for transformer_block in self.transformer_blocks:
             x = transformer_block(x)
-        
-        x = x[:, :, :self.config.d_embed // 2]
         
         x = self.ln_f(x)
         
