@@ -57,7 +57,7 @@ class GFeedForward(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.fc_1 = nn.Linear(config.d_embed, 4 * config.d_embed)
+        self.fc_1 = nn.Linear(config.d_embed // 2, 4 * config.d_embed)
         self.fc_2 = nn.Linear(4 * config.d_embed, config.d_embed // 2)
         
         self.activation = nn.GELU()    
@@ -167,7 +167,7 @@ class GBlock(nn.Module):
         
         self.ln_f = nn.LayerNorm(config.d_embed // 2)
         self.ln_g = nn.LayerNorm(config.d_embed // 2)
-        self.ln_ff = nn.LayerNorm(config.d_embed)
+        self.ln_ff = nn.LayerNorm(config.d_embed // 2)
         
     def forward(self, f, g):
         if self.config.gather_neurons:
@@ -181,7 +181,8 @@ class GBlock(nn.Module):
         if self.config.gather_neurons:
             self.neurons['attn'] = f
 
-        x = torch.cat([f, g], dim=-1)
+        # x = torch.cat([f, g], dim=-1)
+        x = f
         
         g = g + self.feed_forward(self.ln_ff(x))
         

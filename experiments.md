@@ -1,12 +1,12 @@
 Experiment Settings:
 
-Transformer (FG into transformer) (0.93?)
+Transformer (FG into transformer) (FG into FF) (0.93?)
 
 T1 - F into transformer
 T2 - G into transformer
 
-T3 - Loose QK
-T4 - Loose V
+T3 - F into FF
+T4 - G into FF
 
-T5 -
-T6 -
+T5 - No skip FF
+T6 - F skip FF
