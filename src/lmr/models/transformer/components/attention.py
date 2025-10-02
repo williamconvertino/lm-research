@@ -12,22 +12,15 @@ class Attention(nn.Module):
         
         self.config = config
         
-        self.W_q = nn.Linear(config.embed_dim, config.hidden_dim, bias=False)
+        self.W_q = nn.Linear(config.embed_dim, config.hidden_dim, bias=False) # We set biases according to https://arxiv.org/pdf/2302.08626
         self.W_k = nn.Linear(config.embed_dim, config.hidden_dim, bias=False)
         self.W_v = nn.Linear(config.embed_dim, config.hidden_dim, bias=True)
         self.W_o = nn.Linear(config.hidden_dim, config.embed_dim, bias=True)
         
-        self.attn_scale = 1 / math.sqrt(config.hidden_dim // config.n_heads)
-        
         self.rotary_embeddings = RotaryPositionalEmbeddings(config.hidden_dim // config.n_heads, max_seq_len=config.max_seq_len + 10)
         
-        # self.drop_attn = nn.Dropout(0.1)
         self.drop_resid = nn.Dropout(0.1)
         
-        # causal_mask = torch.triu(torch.ones(config.max_seq_len + 10, config.max_seq_len + 10), diagonal=1).bool()
-        
-        # self.register_buffer("causal_mask", causal_mask)
-    
     def forward(self, x):
         
         B, S, E = x.shape
