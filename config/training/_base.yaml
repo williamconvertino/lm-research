@@ -1,0 +1,37 @@
+# Identity
+training_name: null                  # [REQUIRED]
+use_ddp: false
+
+# Optimizer (Only AdamW currently supported)
+betas: [0.9, 0.95]
+weight_decay: 0.1
+
+# Training
+max_epochs: null            # [REQUIRED]
+warmup_steps: null          # [REQUIRED] Warmup for N steps (int) or fraction of total steps (float)
+steps_per_epoch: auto       # Useful for streaming or infinite datasets
+
+# Precision and Compilation
+precision: float16
+compile: true
+compile_mode: default
+
+# Learning Rate + LR Search
+lr: null                    # [REQUIRED - lr or lr_search=true] Ignored if lr_search is true
+lr_search: false            
+lr_search_values: []
+lr_search_epochs: null      # [REQUIRED - lr_search_epochs or lr_search_steps if lr_search=true]
+lr_search_steps: null
+
+# Data Loading
+batch_size: 32
+num_workers: 8
+use_sliding_window: true
+
+# Gradient Accumulation
+use_grad_accum: false
+grad_accum_steps: auto      # If tokens_per_step is set, automatically configures gradient accumulation to keep the effective batch size constant (incorporates batch_size and world size)
+tokens_per_step: null       # [REQUIRED - tokens_per_step if grad_accum_steps=auto]
+
+# Validation
+validation_steps: null    # Validate every N steps - if null, only validates on epoch

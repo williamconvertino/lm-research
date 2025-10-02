@@ -1,0 +1,12 @@
+defaults:
+  - _base
+  - _self_
+
+# Size Identity
+size_name: 1_3b
+
+# Dimensions
+n_layers: 24
+n_heads: 32
+hidden_dim: 2048
+max_seq_len: 2048

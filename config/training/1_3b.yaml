@@ -1,0 +1,32 @@
+defaults:
+  - _base
+  - _self_
+
+# Identity
+training_name: 1_3b
+use_ddp: true
+
+# Training
+max_epochs: 1
+warmup_steps: 500
+
+# Precision and Compilation
+precision: bfloat16
+compile: true
+compile_mode: default
+
+# Learning Rate + LR Search
+lr: 2e-4
+
+# Data Loading
+batch_size: 32
+num_workers: 8
+use_sliding_window: true
+
+# Gradient Accumulation and Step Tracking
+use_grad_accum: true
+grad_accum_steps: auto
+tokens_per_step: 1048576     # ~1m
+
+# Validation Steps
+validation_steps: 1000

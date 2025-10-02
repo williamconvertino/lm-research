@@ -1,0 +1,15 @@
+# Fine-tuned dimension control
+embed_dim: auto                    # Defaults to hidden_dim
+mlp_dim: auto                      # Defaults to hidden_dim × 4
+
+# FST dims
+n_heads_f: auto                    # FST: Defaults to n_heads
+n_heads_phi: auto                  # FST: Defaults to n_heads
+hidden_dim_f: auto                 # FST: Defaults to hidden_dim
+hidden_dim_phi: auto               # FST: Defaults to hidden_dim
+
+# FST fine-tuned dimension control
+embed_dim_f: auto                  # FST: Defaults to hidden_dim_f
+embed_dim_phi: auto                # FST: Defaults to hidden_dim_phi
+mlp_dim_f: auto                    # FST: Defaults to hidden_dim_f × 4
+mlp_dim_phi: auto                  # FST: Defaults to hidden_dim_phi × 4

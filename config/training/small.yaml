@@ -1,0 +1,23 @@
+defaults:
+  - _base
+  - _self_
+
+# Identity
+training_name: small
+
+# Training
+max_epochs: 20
+warmup_steps: 1000
+
+# Precision and Compilation
+precision: float16
+compile: true
+compile_mode: default
+
+# Learning Rate + LR Search
+lr: 2e-4
+
+# Data Loading
+batch_size: 24
+num_workers: 8
+use_sliding_window: true

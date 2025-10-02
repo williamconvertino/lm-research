@@ -1,0 +1,12 @@
+defaults:
+  - _base
+  - _self_
+
+# Size Identity
+size_name: large
+
+# Dimensions
+n_layers: 36
+n_heads: 20
+hidden_dim: 1280
+max_seq_len: 1024

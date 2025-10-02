@@ -1,0 +1,25 @@
+defaults:
+  - _base
+  - _self_
+  
+# Dataset Identity
+dataset_name: slimpajama_60b
+init_fn: lmr.datasets.slimpajama.initialize_dataset
+
+# Token Limits
+max_tokens_train: 60b       # Determines the number of tokens SAVED, not necessarily the total training tokens.
+max_tokens_validation: 60m
+max_tokens_test: 60m
+
+tokens_buffer: 100k          # Saves additional tokens (per component) to prevent batch/sequence level inconsistencies.
+
+# Proportional Sampling (Keeping default proportions)
+sampling_type: proportional
+proportions:
+  RedPajamaCommonCrawl: 0.522
+  RedPajamaC4: 0.267
+  RedPajamaGithub: 0.052
+  RedPajamaBook: 0.042
+  RedPajamaArXiv: 0.046
+  RedPajamaWikipedia: 0.038
+  RedPajamaStackExchange: 0.033

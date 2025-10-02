@@ -1,0 +1,16 @@
+defaults:
+  - model: transformer
+  - size: 1_3b
+  - training: 1_3b
+  - dataset: slimpajama_1m
+  - _self_
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+
+mode: train
+checkpoint_name: auto     # By default, sets the name to {model_name}_{size_name}
+tokenizer_base: auto      # Defaults to GPT2 (50k vocab size)
+seed: 42

@@ -1,0 +1,7 @@
+defaults:
+  - fst
+  - _self_
+
+# Model Identity
+model_name: fst_clean
+model_class: src.models.fst_clean.FSTClean

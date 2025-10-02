@@ -1,0 +1,6 @@
+defaults:
+  - _self_
+
+# Model Identity
+model_name: transformer
+model_class: lmr.models.transformer.Transformer

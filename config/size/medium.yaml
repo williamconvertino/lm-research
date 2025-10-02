@@ -1,0 +1,12 @@
+defaults:
+  - _base
+  - _self_
+
+# Size Identity
+size_name: medium
+
+# Dimensions
+n_layers: 24
+n_heads: 16
+hidden_dim: 1024
+max_seq_len: 1024

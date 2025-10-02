@@ -1,0 +1,25 @@
+defaults:
+  - _base
+  - _self_
+  
+# Dataset Identity
+dataset_name: slimpajama_1m
+init_fn: lmr.datasets.slimpajama.initialize_dataset
+
+# Token Limits
+max_tokens_train: 1m
+max_tokens_validation: 1m
+max_tokens_test: 1m
+
+tokens_buffer: 10k
+
+# Proportional Sampling
+sampling_type: proportional
+proportions:
+  RedPajamaCommonCrawl: 0.38
+  RedPajamaC4: 0.20
+  RedPajamaGithub: 0.06
+  RedPajamaBook: 0.09
+  RedPajamaArXiv: 0.09
+  RedPajamaWikipedia: 0.09
+  RedPajamaStackExchange: 0.09
