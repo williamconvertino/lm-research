@@ -31,6 +31,6 @@ SBATCH_ARGS="--job-name=${JOB_NAME} \
 sbatch $SBATCH_ARGS ../jobs/run_job_h200.sh \
     model=${MODEL_NAME} \
     size=1_3b \
-    training=test \
-    dataset=slimpajama_1m \
+    training=1_3b \
+    dataset=slimpajama_5m \
     "$@"

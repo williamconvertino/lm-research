@@ -11,7 +11,7 @@ from omegaconf import OmegaConf
 from lmr.config import initialize_config
 from lmr.tokenizer import Tokenizer
 from lmr.models import get_model
-from lmr.datasets import initialize_dataset, get_dataset_splits
+from lmr.data import initialize_dataset, get_dataset_splits
 from lmr.training import Trainer
 from lmr.checkpointing import Checkpointing
 from lmr.utils.seed import set_seed
