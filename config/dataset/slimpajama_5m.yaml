@@ -4,7 +4,7 @@ defaults:
   
 # Dataset Identity
 dataset_name: slimpajama_1m
-init_fn: lmr.datasets.slimpajama.initialize_dataset
+init_fn: lmr.data.slimpajama.initialize_dataset
 
 # Token Limits
 max_tokens_train: 5m

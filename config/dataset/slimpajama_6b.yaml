@@ -4,4 +4,4 @@ defaults:
   
 # Dataset Identity
 dataset_name: slimpajama_6b
-init_fn: lmr.datasets.slimpajama_6b.initialize_dataset
+init_fn: lmr.data.slimpajama_6b.initialize_dataset

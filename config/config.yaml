@@ -2,7 +2,7 @@ defaults:
   - model: transformer
   - size: 1_3b
   - training: 1_3b
-  - dataset: slimpajama_1m
+  - dataset: slimpajama_5m
   - _self_
 
 hydra:
