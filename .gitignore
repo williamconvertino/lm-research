@@ -11,9 +11,6 @@ errors/
 *.log
 *.err
 
-# Environment
-env.sh
-
 # Benchmarking
 lm-evaluation-harness/
 
