@@ -155,10 +155,15 @@ class Checkpointing:
         filename = self._checkpoint_filename(self.epoch, None, self.val_loss)
         self._save_state(filename, include_training_states=False)
         self._update_log("epoch")
+    
+    def _save_step(self):
+        filename = self._checkpoint_filename(self.epoch, self.step, self.val_loss)
+        self._save_state(filename, include_training_states=False)
+        self._update_log("step")
 
     # ---------- checkpoint saving ----------
 
-    def save_checkpoint(self, epoch, step=0, train_loss=None, val_loss=None, tokens_trained=None):
+    def save_checkpoint(self, epoch, step=None, train_loss=None, val_loss=None, tokens_trained=None):
         
         if self.is_main_process:
     
@@ -169,6 +174,8 @@ class Checkpointing:
             if step is None:
                 self.step = 0
                 self._save_epoch()
+            else:
+                self._save_step()
 
             if (self.val_loss is not None) and (self.val_loss < self.best_val_loss):
                 self.best_val_loss = self.val_loss
