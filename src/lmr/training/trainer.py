@@ -249,7 +249,6 @@ class Trainer:
                     self._ddp_barrier()
                     mr_validation_loss = self._validate()
                     mr_validation_ppl = math.exp(mr_validation_loss)
-                    save_step = step % 
                     if self.rank == 0: self.checkpointing.save_checkpoint(epoch, step + 1, mr_step_loss, mr_validation_loss, tokens_trained)
                     self._ddp_barrier()
                     
