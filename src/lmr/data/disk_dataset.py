@@ -22,17 +22,17 @@ class DiskDataset(Dataset):
         self.data = np.memmap(self.file_path, dtype="int32", mode="r")
         self.file_size = len(self.data)
         
-        self.n_batches = 1 + max(0, (self.file_size - self.max_seq_len) // self.stride)
+        self.n_samples = 1 + max(0, (self.file_size - self.max_seq_len) // self.stride)
 
     def __len__(self):
-        return self.n_batches
+        return self.n_samples
 
     def get_token_count(self):
         return self.file_size
 
     def __getitem__(self, idx):
         if self.allow_cycling:
-            idx = idx % self.n_batches
+            idx = idx % self.n_samples
         start = idx * self.stride
         end = start + self.max_seq_len
         seq = np.array(self.data[start:end], dtype=np.int32, copy=True)

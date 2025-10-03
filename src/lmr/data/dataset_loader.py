@@ -15,7 +15,7 @@ def get_dataset_splits(dataset_config, max_seq_len, dataset_dir, split_names=('t
     output_dir = dataset_dir / dataset_config.dataset_name
     
     # Initialize dataset if folder missing
-    if not output_dir.exists():
+    if not output_dir.exists() or dataset_config.component_whitelist is not None:
         initialize_dataset(dataset_config, dataset_dir)
         
     splits = {}

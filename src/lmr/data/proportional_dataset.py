@@ -7,25 +7,26 @@ class ProportionalDataset(Dataset):
         assert set(components) == set(proportions), "Components and proportions must have identical keys"
 
         total = sum(proportions.values())
-        assert total == 1.0, f"Proportions must sum to 1.0 (got {total})"
+        assert abs(total - 1.0) < 0.0001, f"Proportions must sum to 1.0 (got {total})"
 
         self.names = list(components.keys())
         self.components = components
         self.proportions = proportions
 
-        # Adjust the length to roughly align with the lower-bound (in case the datasets are unequally sized to the proportions)
-        # Technically they should wrap and have no issues, but this ensures no issues.
-        self.length = min(
+        # Ensures that our proportions are robust to dropped tokens (when the sequence length is imperfect)
+        lower_bound_length = min(
             int(len(components[n]) // proportions[n])
             for n in self.names
             if proportions[n] > 0
         )
 
-        self.counts = [int(round(proportions[n] * self.length)) for n in self.names]
+        self.counts = [int(proportions[n] * lower_bound_length) for n in self.names]
 
         self.offsets = [0]
         for c in self.counts[:-1]:
             self.offsets.append(self.offsets[-1] + c)
+        
+        self.length = sum(count for count in self.counts)
 
     def __len__(self):
         return self.length
