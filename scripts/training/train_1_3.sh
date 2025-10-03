@@ -8,7 +8,7 @@ NUM_NODES=${2:-1}               # default 1 node
 shift 2
 
 # CPUs and memory automatically determined 
-CPUS_PER_TASK=4                             # 8 CPUs per GPU
+CPUS_PER_TASK=8                             # 8 CPUs per GPU
 TOTAL_CPUS=$((NUM_GPUS * CPUS_PER_TASK))
 TOTAL_MEM=$((NUM_GPUS * 32))                # 32gb ram per GPU
 
