@@ -3,7 +3,7 @@ defaults:
   - _self_
   
 # Dataset Identity
-dataset_name: slimpajama_1m
+dataset_name: slimpajama_5m
 init_fn: lmr.data.slimpajama.initialize_dataset
 
 # Token Limits
