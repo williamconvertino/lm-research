@@ -4,4 +4,4 @@ if [ -f "./scripts/env/env.sh" ]; then
     source ./scripts/env/env.sh
 fi
 
-python main.py dataset=slimpajama_5m dataset.component_whitelist=[RedPajamaCommonCrawl] "$@"
+python main.py dataset=slimpajama_120b dataset.component_whitelist=null "$@"
