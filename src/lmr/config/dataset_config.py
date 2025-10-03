@@ -1,15 +1,5 @@
 from lmr.utils.parsing import formatted_string_to_int
 
-def set_dataset_defaults(dataset_config):    
-    
-    # Verify proportional sampling specifications
-    if dataset_config.sampling_type == "proportional":
-        
-        assert hasattr(dataset_config, "proportions"), "Must pass proportion dict when sampling type 'proportional' is set."
-        
-        total_proportion = sum(proportion for proportion in dataset_config.proportions.values())
-        assert total_proportion == 1.0, f"Proportions must sum to 1.0, got {total_proportions}"
-
 def set_proportion_token_limits(dataset_config):    
         
         proportions = dataset_config.proportions

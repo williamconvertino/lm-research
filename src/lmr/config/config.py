@@ -1,7 +1,7 @@
 from omegaconf import OmegaConf
 
 from .model_config import set_model_defaults, set_size_defaults, merge_model_and_size_configs
-from .dataset_config import set_dataset_defaults, set_proportion_token_limits
+from .dataset_config import set_proportion_token_limits
 from .training_config import set_training_defaults
 
 def initialize_config(config):
@@ -35,7 +35,6 @@ def initialize_config(config):
     # Initialize dataset
     if hasattr(config, "dataset") and config.dataset is not None:
         dataset_config = config.dataset
-        set_dataset_defaults(dataset_config)
         if dataset_config.sampling_type == "proportional":
             set_proportion_token_limits(dataset_config)
         

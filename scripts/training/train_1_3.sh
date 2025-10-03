@@ -1,19 +1,28 @@
 #!/bin/bash
 
 # Optional arguments [MODEL_NAME] [NUM_GPUS] [NUM_NODES]
-MODEL_NAME=${1:-transformer}    # default transformer
-NUM_GPUS=${2:-4}                # default 4 GPUs per node
-NUM_NODES=${3:-1}               # default 1 node
+NUM_GPUS=${1:-4}                # default 4 GPUs per node
+NUM_NODES=${2:-1}               # default 1 node
 
-# Clear first 3 args
-shift 3 || true
+# Clear first 2 args to avoid hydra issues
+shift 2
 
 # CPUs and memory automatically determined 
-CPUS_PER_TASK=8                             # 8 CPUs per GPU
+CPUS_PER_TASK=4                             # 8 CPUs per GPU
 TOTAL_CPUS=$((NUM_GPUS * CPUS_PER_TASK))
 TOTAL_MEM=$((NUM_GPUS * 32))                # 32gb ram per GPU
 
-JOB_NAME="${MODEL_NAME}_1_3b"
+
+# Extract model name from hydra overrides
+MODEL_NAME="transformer"
+for arg in "$@"; do
+  if [[ "$arg" == model=* ]]; then
+    MODEL_NAME="${arg#model=}"
+    break
+  fi
+done
+
+JOB_NAME="${MODEL_NAME}_train_1_3b"
 
 echo "Launching training job: $JOB_NAME"
 echo "Nodes: ${NUM_NODES}, GPUs per node: ${NUM_GPUS}"
@@ -29,8 +38,7 @@ SBATCH_ARGS="--job-name=${JOB_NAME} \
              --error=../../logs/${MODEL_NAME}/%x-%j.err"
 
 sbatch $SBATCH_ARGS ../jobs/run_job_h200.sh \
-    model=${MODEL_NAME} \
     size=1_3b \
     training=1_3b \
-    dataset=slimpajama_5m \
+    dataset=slimpajama_120b \
     "$@"

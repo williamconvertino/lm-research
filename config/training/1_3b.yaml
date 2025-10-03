@@ -19,14 +19,14 @@ compile_mode: default
 lr: 2e-4
 
 # Data Loading
-batch_size: 32
+batch_size: 16
 num_workers: 8
 use_sliding_window: true
 
 # Gradient Accumulation and Step Tracking
 use_grad_accum: true
 grad_accum_steps: auto
-tokens_per_step: 1048576     # ~1m
+tokens_per_step: 1048576     # ~1m (Note that this is not perfectly enforced and may be adjusted based on batch size and world size)
 
 # Validation Steps
 validation_steps: 1000

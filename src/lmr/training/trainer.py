@@ -47,6 +47,7 @@ class Trainer:
             self.grad_accum_steps = 1
             
         self.steps_per_epoch = len(self.train_dataloader) // self.grad_accum_steps # May lose a few batches when using grad_accum, but ensures consistent updates
+        
         self.tokens_per_batch = self.training_config.batch_size * self.model.config.max_seq_len
         self.tokens_per_step = self.grad_accum_steps * self.tokens_per_batch * self.world_size
         self.tokens_per_epoch = self.tokens_per_step * self.steps_per_epoch
@@ -208,6 +209,9 @@ class Trainer:
             for micro_step, batch in enumerate(self.train_dataloader):
 
                 step = micro_step // self.grad_accum_steps
+                
+                if step >= self.steps_per_epoch:
+                    break
 
                 if resume and step < start_step:
                     if pbar is not None: pbar.update(1)
