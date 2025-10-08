@@ -1,0 +1,7 @@
+defaults:
+  - fst
+  - _self_
+
+# Model Identity
+model_name: fst_ff
+model_class: src.models.fs_ff.FSTFF

@@ -118,12 +118,7 @@ class Trainer:
         
         with autocast(device_type="cuda", dtype=self.autocast_dtype):
             logits = self.model(input_tokens)
-            loss = F.cross_entropy(
-                logits.reshape(-1, logits.size(-1)),
-                target_tokens.reshape(-1),
-                ignore_index=self.tokenizer.pad_token_id,
-                reduction='mean'
-                )
+            loss = unwrap_model(self.model).calculate_loss(logits, target_tokens, l1_loss_lambda=self.training_config.l1_loss_lambda) # Allows for per-model loss calculations
             
         return loss
         

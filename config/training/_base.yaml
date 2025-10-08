@@ -1,6 +1,7 @@
 # Identity
-training_name: null                  # [REQUIRED]
+training_name: null         # [REQUIRED]
 use_ddp: false
+l1_loss_lambda: null        # Must be implemented in the model's calculate_loss function to use
 
 # Optimizer (Only AdamW currently supported)
 betas: [0.9, 0.95]

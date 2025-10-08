@@ -12,7 +12,6 @@ CPUS_PER_TASK=8                             # 8 CPUs per GPU
 TOTAL_CPUS=$((NUM_GPUS * CPUS_PER_TASK))
 TOTAL_MEM=$((NUM_GPUS * 32))                # 32gb ram per GPU
 
-
 # Extract model name from hydra overrides
 MODEL_NAME="transformer"
 for arg in "$@"; do
@@ -22,7 +21,7 @@ for arg in "$@"; do
   fi
 done
 
-JOB_NAME="${MODEL_NAME}_train_1_3b"
+JOB_NAME="${MODEL_NAME}_train_medium"
 
 DATE=$(date +%F)
 
@@ -40,7 +39,7 @@ SBATCH_ARGS="--job-name=${JOB_NAME} \
              --error=../../logs/${MODEL_NAME}/${DATE}/%x-%j.err"
 
 sbatch $SBATCH_ARGS ../jobs/run_job_h200.sh \
-    size=1_3b \
-    training=1_3b \
+    size=medium \
+    training=medium \
     dataset=slimpajama_120b \
     "$@"

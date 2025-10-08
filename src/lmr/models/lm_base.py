@@ -7,6 +7,34 @@ class LMBase(nn.Module):
     def __init__(self):
         super().__init__()
         self.name=self.full_name="LMBase"
+    
+    def calculate_loss(self, logits, target_tokens, l1_loss_lambda=None):
+        loss = F.cross_entropy(
+            logits.reshape(-1, logits.size(-1)),
+            target_tokens.reshape(-1),
+            reduction='mean'
+            )
+        return loss
+    
+    def init_weights(self, module, num_layers=None):
+        if isinstance(module, nn.Linear):
+            std = 0.02 if num_layers is None else 0.02 / math.sqrt(2 * num_layers)
+            nn.init.normal_(module.weight, mean=0.0, std=std)
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
+
+        elif isinstance(module, nn.Embedding):
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
+
+        elif isinstance(module, nn.LayerNorm):
+            nn.init.ones_(module.weight)
+            nn.init.zeros_(module.bias)
+    
+    def count_parameters(self):
+        total_params = sum(p.numel() for p in self.parameters())
+        embed_params = sum(p.numel() for name, p in self.named_parameters() if "embed" in name.lower())
+        non_embed_params = total_params - embed_params
+        return total_params, embed_params, non_embed_params
 
     @torch.no_grad()
     def generate(
@@ -59,22 +87,4 @@ class LMBase(nn.Module):
         else:
             return generated
 
-    def count_parameters(self):
-        total_params = sum(p.numel() for p in self.parameters())
-        embed_params = sum(p.numel() for name, p in self.named_parameters() if "embed" in name.lower())
-        non_embed_params = total_params - embed_params
-        return total_params, embed_params, non_embed_params
-
-    def init_weights(self, module, num_layers=None):
-        if isinstance(module, nn.Linear):
-            std = 0.02 if num_layers is None else 0.02 / math.sqrt(2 * num_layers)
-            nn.init.normal_(module.weight, mean=0.0, std=std)
-            if module.bias is not None:
-                nn.init.zeros_(module.bias)
-
-        elif isinstance(module, nn.Embedding):
-            nn.init.normal_(module.weight, mean=0.0, std=0.02)
-
-        elif isinstance(module, nn.LayerNorm):
-            nn.init.ones_(module.weight)
-            nn.init.zeros_(module.bias)
+    

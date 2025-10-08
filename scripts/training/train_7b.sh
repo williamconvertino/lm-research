@@ -22,7 +22,7 @@ for arg in "$@"; do
   fi
 done
 
-JOB_NAME="${MODEL_NAME}_train_1_3b"
+JOB_NAME="${MODEL_NAME}_train_7b"
 
 DATE=$(date +%F)
 
@@ -40,7 +40,7 @@ SBATCH_ARGS="--job-name=${JOB_NAME} \
              --error=../../logs/${MODEL_NAME}/${DATE}/%x-%j.err"
 
 sbatch $SBATCH_ARGS ../jobs/run_job_h200.sh \
-    size=1_3b \
-    training=1_3b \
+    size=7b \
+    training=7b \
     dataset=slimpajama_120b \
     "$@"

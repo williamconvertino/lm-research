@@ -5,6 +5,7 @@ from pathlib import Path
 from glob import glob
 
 from lmr.utils.logger import Logger
+from lmr.utils.parsing import int_to_formatted_string
 from lmr.ddp import unwrap_model
 
 class Checkpointing:
@@ -69,7 +70,7 @@ class Checkpointing:
                     pass
         return best_val
 
-    def _checkpoint_filename(self, epoch, step=None, val_loss=None, prefix=None):
+    def _checkpoint_filename(self, epoch, step=None, val_loss=None, tokens_trained=None, prefix=None):
         
         name = f"epoch_{epoch:03d}"
         
@@ -77,6 +78,8 @@ class Checkpointing:
             name = f"{prefix}_{name}"
         if step is not None:
             name += f"_step_{step:09d}"
+        if tokens_trained is not None:
+            name += f"_tokens_{int_to_formatted_string(tokens_trained)}"
         if val_loss is not None:
             name += f"_val={val_loss:.4f}"
         
@@ -141,23 +144,23 @@ class Checkpointing:
 
     def _save_best(self):
         self._remove_old("best_epoch*_step*_val=*.pt")
-        filename = self._checkpoint_filename(self.epoch, self.step, self.val_loss, prefix="best")
+        filename = self._checkpoint_filename(self.epoch, self.step, self.val_loss, self.tokens_trained, prefix="best")
         self._save_state(filename, include_training_states=False)
         self._update_log("best")
         
     def _save_recent(self):
         self._remove_old("recent_epoch*_step*_val=*.pt")
-        filename = self._checkpoint_filename(self.epoch, self.step, self.val_loss, prefix="recent")
+        filename = self._checkpoint_filename(self.epoch, self.step, self.val_loss, self.tokens_trained, prefix="recent")
         self._save_state(filename, include_training_states=True)
         self._update_log("recent")
 
     def _save_epoch(self):
-        filename = self._checkpoint_filename(self.epoch, None, self.val_loss)
+        filename = self._checkpoint_filename(self.epoch, None, self.val_loss, self.tokens_trained)
         self._save_state(filename, include_training_states=False)
         self._update_log("epoch")
     
     def _save_step(self):
-        filename = self._checkpoint_filename(self.epoch, self.step, self.val_loss)
+        filename = self._checkpoint_filename(self.epoch, self.step, self.val_loss, self.tokens_trained)
         self._save_state(filename, include_training_states=False)
         self._update_log("step")
 

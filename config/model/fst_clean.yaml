@@ -5,3 +5,5 @@ defaults:
 # Model Identity
 model_name: fst_clean
 model_class: src.models.fst_clean.FSTClean
+
+use_f_resid: False
