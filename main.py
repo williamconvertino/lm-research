@@ -13,11 +13,22 @@ from lmr.tokenizer import Tokenizer
 from lmr.models import get_model
 from lmr.data import initialize_dataset, get_dataset_splits
 from lmr.training import Trainer
+from lmr.benchmark import Benchmark
 from lmr.checkpointing import Checkpointing
 from lmr.utils.seed import set_seed
 
 DATASET_DIR = Path("datasets")
 CHECKPOINT_DIR = Path("checkpoints")
+BENCHMARK_DIR = Path("output")
+
+def benchmark_model(config):
+    tokenizer = Tokenizer(config.tokenizer_base)
+    model = get_model(config.model, tokenizer.vocab_size)
+    checkpointing = Checkpointing(model, CHECKPOINT_DIR / config.checkpoint_name)
+    
+    benchmarking = Benchmark(config.benchmark, model, tokenizer, checkpointing, BENCHMARK_DIR / config.checkpoint_name)
+    
+    benchmarking.run_benchmarks()
 
 def train_model(config):
     
@@ -42,6 +53,8 @@ def main(config):
     
     if config.mode == "train":
         train_model(config)
+    if config.mode == "benchmark":
+        benchmark_model(config)
     
 if __name__ == "__main__":
     main()

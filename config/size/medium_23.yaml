@@ -1,0 +1,18 @@
+defaults:
+  - medium
+  - _self_
+
+# Size Identity
+size_name: medium_23
+
+# Dimensions
+max_seq_len: 1024
+n_layers: 24
+n_heads: 16
+
+# FST dims
+# hidden_dim: 1024
+hidden_dim_phi: 768
+mlp_dim_phi: 3072
+hidden_dim_f: 1280
+mlp_dim_f: 5120

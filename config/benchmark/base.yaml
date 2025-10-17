@@ -1,0 +1,39 @@
+checkpoint_mode: best # Options: best, recent, epoch_x
+
+batch_size: 32
+num_workers: 8
+
+precision: bfloat16
+compile: true
+compile_mode: default
+
+prefix: null
+num_fewshot: null
+
+# Benchmark tasks to run
+tasks:
+  - hellaswag
+  - winogrande
+  - piqa
+  # - triviaqa
+  # - truthfulqa 
+  
+  # - lambada
+  - lambada_openai
+
+  - arc_challenge
+  - arc_easy
+
+  # - glue
+  # - wikitext
+  # - gsm8k
+  
+
+# Evaluation settings
+limit: 5000 # Limit number of examples per task (null for all)
+bootstrap_iters: 200 # Number of bootstrap iterations for confidence intervals
+
+# limit: 5
+# bootstrap_iters: 2
+
+use_pretrained_model: null

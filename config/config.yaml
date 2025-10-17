@@ -3,6 +3,7 @@ defaults:
   - size: 1_3b
   - training: 1_3b
   - dataset: slimpajama_5m
+  - benchmark: base
   - _self_
 
 hydra:

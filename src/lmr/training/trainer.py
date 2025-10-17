@@ -204,18 +204,19 @@ class Trainer:
             for micro_step, batch in enumerate(self.train_dataloader):
 
                 step = micro_step // self.grad_accum_steps
+                is_update_step = ((micro_step + 1) % self.grad_accum_steps == 0)
                 
                 if step >= self.steps_per_epoch:
                     break
 
                 if resume and step < start_step:
                     if pbar is not None: pbar.update(1)
+                    if is_update_step:
+                        self.scheduler.step()
                     continue
                 elif resume:
                     resume = False
-                    
-                is_update_step = ((micro_step + 1) % self.grad_accum_steps == 0)
-                    
+                        
                 sync_ctx = self.model.no_sync() if (self.use_ddp and not is_update_step) else nullcontext()
                 
                 with sync_ctx:

@@ -17,7 +17,7 @@ class ICLAttention(nn.Module):
         self.W_v = nn.Linear(config.embed_dim_f, config.hidden_dim_f, bias=True)
         self.W_o = nn.Linear(config.hidden_dim_f, config.embed_dim_f, bias=True)
         
-        self.rotary_embeddings = RotaryPositionalEmbeddings(config.hidden_dim_phi // config.n_heads_phi, max_seq_len=config.max_seq_len + 10)
+        self.rotary_embeddings = RotaryPositionalEmbeddings(config.hidden_dim_f // config.n_heads_f, max_seq_len=config.max_seq_len + 10)
         
         self.drop_resid = nn.Dropout(0.1)
         
